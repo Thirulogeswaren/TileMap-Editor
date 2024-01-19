@@ -1,0 +1,12 @@
+
+# bin folders
+Debug
+Release
+
+# cmake builds
+out
+build
+
+# cmake settings
+CMakeSettings.json
+CMakePresets.json
