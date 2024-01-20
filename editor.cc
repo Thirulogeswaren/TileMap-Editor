@@ -18,7 +18,10 @@ struct Editor
 
 void Editor::GuiUpdates()
 {
-	ImGui::Begin("Hello");
+	ImGui::Begin("Properties");
+	ImGui::Text("Framerate: %.0f", ImGui::GetIO().Framerate);
+
+	Console::Render();
 
 	ImGui::End();
 }
