@@ -2,6 +2,7 @@
 # bin folders
 Debug
 Release
+bin
 
 # cmake builds
 out
@@ -10,3 +11,6 @@ build
 # cmake settings
 CMakeSettings.json
 CMakePresets.json
+
+# manifest mode
+vcpkg_installed
