@@ -18,22 +18,29 @@ struct Editor
 
 void Editor::GuiUpdates()
 {
+	Console::Render();
+
 	ImGui::Begin("Properties");
 	ImGui::Text("Framerate: %.0f", ImGui::GetIO().Framerate);
+	
+	ImGui::Spacing();
 
-	Console::Render();
+	Tileset::BeginEndUI();
 
 	ImGui::End();
 }
 
 Editor::Editor() : delta_time{} {
 
-	window.create({ 1280, 720 }, "Editor", sf::Style::Default);
+	window.create({ 1600, 900 }, "Editor", sf::Style::Default);
 	window.setVerticalSyncEnabled(true);
 
-	ImGui::SFML::Init(window);
+	ImGui::SFML::Init(window, false);
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	ImGui::GetIO().FontGlobalScale = 1.0f;
 
+	ImGui::GetIO().Fonts->AddFontFromFileTTF("cousine.ttf", 19.0f);
+	ImGui::SFML::UpdateFontTexture();
 }
 
 Editor::~Editor()
@@ -62,9 +69,10 @@ int main()
 
 		ImGui::SFML::Update(window, dt.restart());
 
+		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 		core.GuiUpdates();
-
 		
+					
 		// Render States
 		window.clear(sf::Color::Black);
 

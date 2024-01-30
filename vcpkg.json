@@ -1,0 +1,11 @@
+{
+  "dependencies": [
+    {
+      "name": "imgui",
+      "features": [ "docking-experimental" ]
+    },
+    "imgui-sfml",
+    "nativefiledialog"
+  ],
+  "builtin-baseline": "b2f8426094693faaeb29ec92aaae2ca393f6f0c9"
+}
