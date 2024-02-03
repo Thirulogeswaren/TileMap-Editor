@@ -1,5 +1,5 @@
-#ifndef CONSOLE_LOGGER_SPACE_H
-#define CONSOLE_LOGGER_SPACE_H
+#ifndef CONSOLE_LOGGER_FILE_H
+#define CONSOLE_LOGGER_FILE_H
 
 enum MessageType {
     NORMAL = 0,

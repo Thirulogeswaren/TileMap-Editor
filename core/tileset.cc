@@ -1,11 +1,11 @@
-#include "tileset.h"
+#include "settings.h"
+
+#include "hbuffer.h"
 
 #include "imgui.h"
 #include "imgui-SFML.h"
-#include "nfd.h"
 
-#include "util/console.h"
-#include "SFML/Graphics.hpp"
+#include "nfd.h"
 
 namespace {
 
@@ -19,30 +19,25 @@ namespace {
 		ImGuiWindowFlags_NoCollapse
 	};
 
-	// 8 pixels by default
-	float tile_size[2]{ 8.0f, 8.0f };
-
-	float scale{ 1.0f }; // zoom level
-
 	std::string filename;
 
-	ImVec2 canvas_min{ 1.0f, 1.0f }; // top-left 0 x 0
-	ImVec2 canvas_max{ 1.0f, 1.0f }; // bottom-right 256 x 256
-	ImVec2 canvas_size{ 1.0f, 1.0f }; // scale * 256
-	ImVec2 grid_size{ 8.0f, 8.0f };
+	ImVec2 canvas_min, canvas_max;
+	ImVec2 canvas_size, grid_size;
 
-	ImVec2 mouse_position{ 0.0f, 0.0f };
+	ImVec2 mouse_position;
 
-	sf::Texture target;
-	sf::Image image;
+	sf::Vector2f tilesz{ 8.0f, 8.0f };
+	sf::Texture& target = hbuffer::getTarget();
 }
 
-void Tileset::BeginEndUI()
-{
-	ImGui::SeparatorText("Tileset Properties");
+using namespace settings;
 
-	if (ImGui::Button("load texture"))
-		is_settings_open = true;
+void tileset_importer::BeginEndUI()
+{
+	auto& [index, capacity, scale, tile_size] = hbuffer::current;
+
+
+	ImGui::SeparatorText("TileSet Properties");
 
 	// active only when loading texture
 	if (nfdchar_t* filepath = nullptr; is_settings_open)
@@ -52,60 +47,81 @@ void Tileset::BeginEndUI()
 		ImGui::SetNextWindowSize({ 250.0f, 150.0f },ImGuiCond_FirstUseEver);
 		ImGui::Begin("Import Settings", nullptr, settings_flags);
 		ImGui::Text("tile width  "); ImGui::SameLine();
-		ImGui::InputFloat("##1", &tile_size[0], 0.0F, 0.0F, "%.0f");
+		ImGui::InputFloat("##1", &tilesz.x, 0.0F, 0.0F, "%.0f");
 		ImGui::Text("tile height "); ImGui::SameLine();
-		ImGui::InputFloat("##2", &tile_size[1], 0.0F, 0.0F, "%.0f");
+		ImGui::InputFloat("##2", &tilesz.y, 0.0F, 0.0F, "%.0f");
 		ImGui::Spacing();
-		if (ImGui::Button("browse")) {
-			if (NFD_OpenDialog("png", nullptr, &filepath) == NFD_OKAY)
+		if (ImGui::Button("browse"))
+		{
+			if (NFD_OpenDialog(nullptr, nullptr, &filepath) == NFD_OKAY)
 			{
-				filename = { filepath };
 				settings_result = NFD_OKAY;
+				filename = { filepath };
 			}
 		}
+
 		ImGui::SameLine();
+		
 		if (ImGui::Button("ok")) {
-			is_settings_open = false;
-			if (settings_result) {
-				if (image.loadFromFile(filename)) {
-					Console::LogMessage("loaded ", filename.c_str(), INFO);
-				}
-				else {
-					Console::LogMessage("[error] ", filename.c_str(), ERROR);
-				}
-				target.loadFromImage(image);
+			if (settings_result == NFD_OKAY) {
+				tile_size = tilesz; // set the current size
+				hbuffer::loadImage(filename);
 				canvas_size.x = target.getSize().x * scale;
 				canvas_size.y = target.getSize().y * scale;
-
-				settings_result = NFD_ERROR;
 			}
+			is_settings_open = false;
+			settings_result = NFD_ERROR;
 		}
 
 		ImGui::End();
 	} 
 
 
-	ImGui::Text("tile width:  %.0f", tile_size[0]);
-	ImGui::Text("tile height: %.0f", tile_size[1]);
-	ImGui::Text("texture width:  %d", target.getSize().x);
-	ImGui::Text("texture height: %d", target.getSize().y);
+	ImGui::Text("tile size:  %.0f x %0.f", tile_size.x, tile_size.y);
+	ImGui::Text("dimensions: %d x %d", target.getSize().x, target.getSize().y);
+
+	ImGui::Spacing();
+	
+	if (ImGui::Button("load texture"))
+		is_settings_open = true;
 
 	ImGui::Spacing();
 
-	if (ImGui::SliderFloat("##", &scale, 1.0f, 9.0f, "%.0f"))
+	if (ImGui::SliderFloat("##", &scale, 1.0f, 9.0f, "%.1f"))
 	{
 		canvas_size.x = target.getSize().x * scale;
 		canvas_size.y = target.getSize().y * scale;
 	}
 
-	ImGui::Text("x-position: %.0f", mouse_position.x);
-	ImGui::Text("y-position: %.0f", mouse_position.y);
+	ImGui::Spacing();
+
+	if (ImGui::ArrowButton("##1", ImGuiDir_Left))
+	{
+		hbuffer::lTarget();
+		canvas_size.x = target.getSize().x * scale;
+		canvas_size.y = target.getSize().y * scale;
+	} 
+	ImGui::SameLine(); 
+	ImGui::Text("Loaded TileSets");
+	ImGui::SameLine();
+	if (ImGui::ArrowButton("##2", ImGuiDir_Right))
+	{
+		hbuffer::rTarget();
+		canvas_size.x = target.getSize().x * scale;
+		canvas_size.y = target.getSize().y * scale;
+	}
+	ImGui::SameLine();
+	ImGui::Text("loaded: %d", capacity + 1);
+
+	ImGui::Spacing();
+	ImGui::BeginChild("Overview", ImVec2{}, 0, ImGuiWindowFlags_HorizontalScrollbar);
 
 	canvas_min = ImGui::GetCursorScreenPos();
 	mouse_position.x = (ImGui::GetMousePos().x - canvas_min.x);
 	mouse_position.y = (ImGui::GetMousePos().y - canvas_min.y);
 
-	// irrespective of the zoom scale
+	// irrespective of the zoom level
+	// later used by hidden buffer
 	mouse_position.x /= scale;
 	mouse_position.y /= scale;
 
@@ -115,8 +131,8 @@ void Tileset::BeginEndUI()
 	canvas_max.y += canvas_size.y;
 
 	// grid size <lines>
-	grid_size.x = tile_size[0] * scale;
-	grid_size.y = tile_size[1] * scale;
+	grid_size.x = tile_size.x * scale;
+	grid_size.y = tile_size.y * scale;
 	
 	ImDrawList* dl = ImGui::GetWindowDrawList();
 
@@ -137,4 +153,5 @@ void Tileset::BeginEndUI()
 	{
 		dl->AddLine(pt, pt2, IM_COL32(0, 0, 0, 255), 3.0F);
 	}
+	ImGui::EndChild();
 }
