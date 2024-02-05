@@ -1,22 +1,30 @@
 #ifndef HIDDEN_TILESET_BUFFER_H
 #define HIDDEN_TILESET_BUFFER_H
 
-#include "SFML/Graphics.hpp"
+#include "SFML/Graphics/Texture.hpp"
+#include <string_view>
 
 namespace hbuffer
 {
-	inline struct /* live contents */ {
-		int index = 0;
-		int capacity = 0;
-		float scale = 1.0f;
-		sf::Vector2f size = { 8.0f, 8.0f };
-	} current;
+	bool LoadImage(std::string_view filepath);
 
-	void loadImage(std::string_view filepath);
+	class TilesetProperties {
+	public:
+		inline static int index = 0;
+		inline static int count = 0;
 
-	void lTarget();
-	void rTarget();
-	sf::Texture& getTarget();
+		sf::Texture target;
+		sf::Vector2f tile_size{ 8.0f, 8.0f };
+		float zoom_level{ 3.0f };
+
+		void MovePointerR();
+		void MovePointerL();
+
+	private:
+		void UpdateCurrent();
+	};
+
+	inline TilesetProperties current;
 
 };
 

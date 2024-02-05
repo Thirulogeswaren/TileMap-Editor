@@ -26,17 +26,17 @@ namespace {
 
 	ImVec2 mouse_position;
 
-	sf::Vector2f tilesz{ 8.0f, 8.0f };
-	sf::Texture& target = hbuffer::getTarget();
+	sf::Vector2f initial_size { 8.0f, 8.0f };
 }
 
 using namespace settings;
 
-void tileset_importer::BeginEndUI()
+void tileset::RenderUI()
 {
-	auto& [index, capacity, scale, tile_size] = hbuffer::current;
 
+	auto& [target, tile_size, scale] = hbuffer::current;
 
+	ImGui::Spacing();
 	ImGui::SeparatorText("TileSet Properties");
 
 	// active only when loading texture
@@ -47,9 +47,9 @@ void tileset_importer::BeginEndUI()
 		ImGui::SetNextWindowSize({ 250.0f, 150.0f },ImGuiCond_FirstUseEver);
 		ImGui::Begin("Import Settings", nullptr, settings_flags);
 		ImGui::Text("tile width  "); ImGui::SameLine();
-		ImGui::InputFloat("##1", &tilesz.x, 0.0F, 0.0F, "%.0f");
+		ImGui::InputFloat("##1", &initial_size.x, 0.0F, 0.0F, "%.0f");
 		ImGui::Text("tile height "); ImGui::SameLine();
-		ImGui::InputFloat("##2", &tilesz.y, 0.0F, 0.0F, "%.0f");
+		ImGui::InputFloat("##2", &initial_size.y, 0.0F, 0.0F, "%.0f");
 		ImGui::Spacing();
 		if (ImGui::Button("browse"))
 		{
@@ -64,10 +64,11 @@ void tileset_importer::BeginEndUI()
 		
 		if (ImGui::Button("ok")) {
 			if (settings_result == NFD_OKAY) {
-				tile_size = tilesz; // set the current size
-				hbuffer::loadImage(filename);
-				canvas_size.x = target.getSize().x * scale;
-				canvas_size.y = target.getSize().y * scale;
+				tile_size = initial_size;
+				if (hbuffer::LoadImage(filename)) {
+					canvas_size.x = target.getSize().x * scale;
+					canvas_size.y = target.getSize().y * scale;
+				}
 			}
 			is_settings_open = false;
 			settings_result = NFD_ERROR;
@@ -97,7 +98,7 @@ void tileset_importer::BeginEndUI()
 
 	if (ImGui::ArrowButton("##1", ImGuiDir_Left))
 	{
-		hbuffer::lTarget();
+		hbuffer::current.MovePointerL();
 		canvas_size.x = target.getSize().x * scale;
 		canvas_size.y = target.getSize().y * scale;
 	} 
@@ -106,15 +107,15 @@ void tileset_importer::BeginEndUI()
 	ImGui::SameLine();
 	if (ImGui::ArrowButton("##2", ImGuiDir_Right))
 	{
-		hbuffer::rTarget();
+		hbuffer::current.MovePointerR();
 		canvas_size.x = target.getSize().x * scale;
 		canvas_size.y = target.getSize().y * scale;
 	}
 	ImGui::SameLine();
-	ImGui::Text("loaded: %d", capacity + 1);
+	ImGui::Text("loaded: %d [%d]", hbuffer::current.count, hbuffer::current.index);
 
 	ImGui::Spacing();
-	ImGui::BeginChild("Overview", ImVec2{}, 0, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::BeginChild("Overview", ImVec2{}, ImGuiChildFlags_Border, ImGuiWindowFlags_HorizontalScrollbar);
 
 	canvas_min = ImGui::GetCursorScreenPos();
 	mouse_position.x = (ImGui::GetMousePos().x - canvas_min.x);
@@ -153,5 +154,6 @@ void tileset_importer::BeginEndUI()
 	{
 		dl->AddLine(pt, pt2, IM_COL32(0, 0, 0, 255), 3.0F);
 	}
+
 	ImGui::EndChild();
 }

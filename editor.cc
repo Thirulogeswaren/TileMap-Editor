@@ -18,14 +18,17 @@ struct Editor
 
 void Editor::GuiUpdates()
 {
+	using namespace settings;
+
 	Console::Render();
 
 	ImGui::Begin("Properties");
 	ImGui::Text("Framerate: %.0f", ImGui::GetIO().Framerate);
 	
-	ImGui::Spacing();
-
-	Tileset::BeginEndUI();
+	const auto& [x, y] = ImGui::GetIO().DisplaySize;
+	ImGui::Text("Display Size: %.0f x %.0f", x, y);
+	
+	tileset::RenderUI();
 
 	ImGui::End();
 }
@@ -39,7 +42,7 @@ Editor::Editor() : delta_time{} {
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	ImGui::GetIO().FontGlobalScale = 1.0f;
 
-	ImGui::GetIO().Fonts->AddFontFromFileTTF("cousine.ttf", 19.0f);
+	ImGui::GetIO().Fonts->AddFontFromFileTTF("cousine.ttf", 20.0f);
 	ImGui::SFML::UpdateFontTexture();
 }
 
@@ -48,19 +51,23 @@ Editor::~Editor()
 	ImGui::SFML::Shutdown();
 }
 
+#ifdef _WIN32_ENTRY__CC
+int WinMain()
+#else
 int main()
+#endif
 {
-	Editor core; sf::Event evnt{};
+	Editor core; sf::Event event{};
 
 	auto& [window, dt] = core;
 
 	while (window.isOpen())
 	{
-		while (window.pollEvent(evnt)) 
+		while (window.pollEvent(event))
 		{
-			ImGui::SFML::ProcessEvent(window, evnt);
+			ImGui::SFML::ProcessEvent(window, event);
 
-			if (evnt.type == sf::Event::Closed)
+			if (event.type == sf::Event::Closed)
 				window.close();
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
@@ -71,8 +78,8 @@ int main()
 
 		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 		core.GuiUpdates();
-		
-					
+
+
 		// Render States
 		window.clear(sf::Color::Black);
 

@@ -3,9 +3,9 @@
 
 namespace settings
 {
-	namespace tileset_importer
+	namespace tileset
 	{
-		void BeginEndUI();
+		void RenderUI();
 	}
 }
 

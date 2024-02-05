@@ -1,72 +1,75 @@
 #include "hbuffer.h"
 #include "../util/console.h"
 
-static constexpr size_t buffer_size{ 128ull };
-static char filename[buffer_size];
+#include "SFML/Graphics/Image.hpp"
 
-#include "imgui.h"
-
-struct tileset_prop
+struct tileset 
 {
 	sf::Image image;
-	sf::Vector2f size;
-	float zscale;
+	sf::Vector2f tile_size;
+	float zoom_level;
 };
 
 #include <vector>
 
-static std::vector<tileset_prop> vTileset;
-static sf::Texture target{};
+static std::vector<tileset> c_tileset;
 
-sf::Texture& hbuffer::getTarget() { return target; }
-
-void hbuffer::loadImage(std::string_view filepath)
+bool hbuffer::LoadImage(std::string_view filepath)
 {
-	memset(filename, 0, buffer_size);
-	filepath.copy(filename, buffer_size);
+	if (tileset temp; temp.image.loadFromFile(filepath.data())) 
+	{
+		temp.tile_size = current.tile_size;
+		temp.zoom_level = 1.0f;
 
-	tileset_prop tileset;
-	tileset.size = current.size;
-	tileset.zscale = 1.0f;
-	if (tileset.image.loadFromFile(filename)) {
-		vTileset.push_back(tileset);
-		current.capacity = (vTileset.size() - 1);
-		Console::LogMessage("loaded ", filename, INFO);
+		c_tileset.push_back(temp);
+
+		current.index = (c_tileset.size() - 1);
+		
+		const auto& [image, tilesize, scale] = c_tileset[current.index];
+
+		current.target.loadFromImage(image);
+		current.tile_size = tilesize;
+		current.zoom_level = scale;
+		current.count++;
+
+		Console::LogMessage("loaded ", filepath.data(), INFO);
+		
+		return true;
 	}
-	else {
-		Console::LogMessage("[error] loading ", filename, ERROR);
-	}
+
+	current.tile_size = c_tileset[current.index].tile_size;
 	
-	rTarget();
+	Console::LogMessage("[error] loading ", filepath.data(), ERROR);
+
+	return false;
 }
 
-// called after saving ...
-static void update_target()
+void hbuffer::TilesetProperties::UpdateCurrent()
 {
-	using namespace hbuffer;
+	if (index >= c_tileset.size()) { index--; }
 
-	if (current.index > current.capacity) {
-		current.index = current.capacity;
-	}
-	if (current.index <= 0) { current.index = 0; }
+	if (index <= 0) { index = 0; }
 
-	const auto& [image, tsize, zscale] = vTileset[current.index];
+	const auto& [image, tilesize, scale] = c_tileset[index];
 
-	target.loadFromImage(image);
-	current.size = tsize;
-	current.scale = zscale;
+	// set the current properties
+	this->target.loadFromImage(image);
+	this->tile_size = tilesize;
+	this->zoom_level = scale;
 }
 
-void hbuffer::lTarget()
+void hbuffer::TilesetProperties::MovePointerR()
 {
-	if (vTileset.empty()) return;
-	vTileset[current.index--].zscale = current.scale;
-	update_target();
+	if (c_tileset.empty()) return;
+
+	c_tileset[index++].zoom_level = this->zoom_level;
+	this->UpdateCurrent();
 }
 
-void hbuffer::rTarget()
+void hbuffer::TilesetProperties::MovePointerL()
 {
-	if (vTileset.empty()) return;
-	vTileset[current.index++].zscale = current.scale;
-	update_target();
+	if (c_tileset.empty()) return;
+
+	c_tileset[index--].zoom_level = this->zoom_level;
+	this->UpdateCurrent();
 }
