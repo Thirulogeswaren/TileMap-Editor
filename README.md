@@ -1,6 +1,6 @@
-# 2D Level Editor
+# Map Editor
 
-making a custom tile map editor
+making a 2D level editor and generator tool . . .
 
 ## Project Dependencies
 - [Dear ImGui](https://github.com/ocornut/imgui)
@@ -35,22 +35,15 @@ vcpkg x-update-baseline --add-initial-baseline
 ```
 this adds the **builtin-baseline** to the manifest file. Next run ```vcpkg install``` to install project dependencies, this will create ```vcpkg_installed``` folder and installs them there.
 
-Run the following command:
+Run the following commands:
 
 ```shell
 mkdir build
 ```
 
-substitude ``%VCPKG_ROOT%`` with your vcpkg installation path, usually it will be under
-``C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg\...``
+substitude ``%VCPKG_ROOT%`` with your vcpkg installation path, usually it will be under ``C:\Program Files\Microsoft Visual Studio\2022\Community\VC\vcpkg\...``
 
 ```shell
 cmake -B build -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake"
-```
-
-then run:
-
-```shell
 cmake --build build --config Release
 ```
-to compile the project.
