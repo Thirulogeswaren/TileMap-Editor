@@ -16,4 +16,3 @@ CMakePresets.json
 # manifest mode
 vcpkg_installed
 vcpkg.json
-/vcpkg.json
