@@ -4,6 +4,17 @@ project(Editor LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
+execute_process(
+	COMMAND ${CMAKE_COMMAND} -E make_directory bin
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+execute_process(
+	COMMAND ${CMAKE_COMMAND} -E copy util/assets/cousine.ttf bin
+	COMMAND ${CMAKE_COMMAND} -E copy util/assets/imgui.ini bin
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
 # ImGui backend includes SFML and ImGui
 find_package(ImGui-SFML CONFIG REQUIRED)
 find_package(unofficial-nativefiledialog CONFIG REQUIRED)
