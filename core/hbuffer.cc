@@ -1,13 +1,13 @@
 #include "hbuffer.h"
-#include "../util/console.h"
 
-#include "SFML/Graphics/Image.hpp"
-
-struct tileset 
+struct tileset
 {
-	sf::Image image;
-	sf::Vector2f tile_size;
-	float zoom_level;
+	sf::Image		image{};
+
+	sf::Vector2f	tile_size{};
+	sf::Vector2u	num_of_tiles_in{};
+	float			num_of_tiles{};
+	float			zoom_level{};
 };
 
 #include <vector>
@@ -18,58 +18,78 @@ bool hbuffer::LoadImage(std::string_view filepath)
 {
 	if (tileset temp; temp.image.loadFromFile(filepath.data())) 
 	{
-		temp.tile_size = current.tile_size;
+		temp.tile_size.x = current.tile_size.x;
+		temp.tile_size.y = current.tile_size.y;
 		temp.zoom_level = 1.0f;
 
-		c_tileset.push_back(temp);
-
-		current.index = (c_tileset.size() - 1);
+		temp.num_of_tiles_in.x = temp.image.getSize().x / temp.tile_size.x;
+		temp.num_of_tiles_in.y = temp.image.getSize().y / temp.tile_size.y;
 		
-		const auto& [image, tilesize, scale] = c_tileset[current.index];
+		temp.num_of_tiles = temp.num_of_tiles_in.x * temp.num_of_tiles_in.y;
 
-		current.target.loadFromImage(image);
-		current.tile_size = tilesize;
-		current.zoom_level = scale;
-		current.count++;
+		c_tileset.emplace_back(temp);
 
-		Console::LogMessage("loaded ", filepath.data(), INFO);
-		
+		if (!c_tileset.empty()) // save before loading
+			c_tileset[index].zoom_level = current.zoom_level;
+
+		index = (c_tileset.size() - 1);
+		count++;
+
+		// set active texture properties
+		current.target.loadFromImage(temp.image);
+
+		current.tile_size.x = temp.tile_size.x;
+		current.tile_size.y = temp.tile_size.y;
+		current.zoom_level  = temp.zoom_level;
+				
 		return true;
 	}
 
-	current.tile_size = c_tileset[current.index].tile_size;
-	
-	Console::LogMessage("[error] loading ", filepath.data(), ERROR);
+	if (c_tileset.empty()) return false;
+
+	current.tile_size.x = c_tileset.at(index).tile_size.x;
+	current.tile_size.y = c_tileset.at(index).tile_size.y;
 
 	return false;
 }
 
-void hbuffer::TilesetProperties::UpdateCurrent()
+static void update_current_tileset()
 {
+	using namespace hbuffer;
+
 	if (index >= c_tileset.size()) { index--; }
 
 	if (index <= 0) { index = 0; }
 
-	const auto& [image, tilesize, scale] = c_tileset[index];
-
 	// set the current properties
-	this->target.loadFromImage(image);
-	this->tile_size = tilesize;
-	this->zoom_level = scale;
+	current.target.loadFromImage(c_tileset[index].image);
+
+	current.tile_size.x = c_tileset[index].tile_size.x;
+	current.tile_size.y = c_tileset[index].tile_size.y;
+	current.zoom_level  = c_tileset[index].zoom_level;
 }
 
-void hbuffer::TilesetProperties::MovePointerR()
+void hbuffer::MovePointerR()
 {
 	if (c_tileset.empty()) return;
 
-	c_tileset[index++].zoom_level = this->zoom_level;
-	this->UpdateCurrent();
+	c_tileset[index++].zoom_level = current.zoom_level;
+	update_current_tileset();
 }
 
-void hbuffer::TilesetProperties::MovePointerL()
+void hbuffer::MovePointerL()
 {
 	if (c_tileset.empty()) return;
 
-	c_tileset[index--].zoom_level = this->zoom_level;
-	this->UpdateCurrent();
+	c_tileset[index--].zoom_level = current.zoom_level;
+	update_current_tileset();
 }
+
+// working with tiles
+
+namespace
+{
+
+}
+
+

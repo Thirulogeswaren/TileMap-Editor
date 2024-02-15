@@ -1,5 +1,5 @@
-#ifndef SETTING_PANEL_UI_HH
-#define SETTING_PANEL_UI_HH
+#ifndef TILESET_PROPERTY_PANEL_HH
+#define TILESET_PROPERTY_PANEL_HH
 
 namespace settings
 {

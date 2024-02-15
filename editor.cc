@@ -23,10 +23,6 @@ void Editor::GuiUpdates()
 	Console::Render();
 
 	ImGui::Begin("Properties");
-	ImGui::Text("Framerate: %.0f", ImGui::GetIO().Framerate);
-	
-	const auto& [x, y] = ImGui::GetIO().DisplaySize;
-	ImGui::Text("Display Size: %.0f x %.0f", x, y);
 	
 	tileset::RenderUI();
 
