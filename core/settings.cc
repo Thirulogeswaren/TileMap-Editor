@@ -22,37 +22,34 @@ namespace {
 
 	std::string filename;
 
-	sf::Vector2f initial_size{ 8.0f, 8.0f };
-
 	// tileset canvas
 	ImVec2 canvas_min, canvas_max;
 	ImVec2 canvas_size, grid_size;
 
-	ImVec2 mouse_position;
-
+	sf::Vector2i active_tile;
+	
 }
 
 using namespace settings;
 
 void tileset::RenderUI()
 {
-	auto& [target, tile_size, scale] = hbuffer::current;
-
 	// active only when loading texture
 	if (nfdchar_t* filepath = nullptr; is_settings_open)
 	{
+		static sf::Vector2i initial_size = { 8, 8 };
 		ImGui::SetNextWindowFocus();
 		ImGui::SetNextWindowPos(ImGui::GetWindowViewport()->GetCenter(), ImGuiCond_None, { 0.5,0.5 });
-		ImGui::SetNextWindowSize({ 250.0f, 150.0f },ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize({ 250.0f, 150.0f }, ImGuiCond_FirstUseEver);
 		ImGui::Begin("Import Settings", nullptr, settings_flags);
 		ImGui::Text("tile width  "); ImGui::SameLine();
 
-		if (ImGui::InputFloat("##1", &initial_size.x, 0.0F, 0.0F, "%.0f"))
+		if (ImGui::InputInt("##1", &initial_size.x))
 			if (settings_toggle) { initial_size.y = initial_size.x; }
 		
 		ImGui::Text("tile height "); ImGui::SameLine();
 
-		if (ImGui::InputFloat("##2", &initial_size.y, 0.0F, 0.0F, "%.0f"))
+		if (ImGui::InputInt("##2", &initial_size.y))
 			if (settings_toggle) { initial_size.x = initial_size.y; }
 
 		ImGui::Spacing();
@@ -74,10 +71,9 @@ void tileset::RenderUI()
 		
 		if (ImGui::Button("ok")) {
 			if (settings_result == NFD_OKAY) {
-				tile_size = initial_size;
-				if (hbuffer::LoadImage(filename)) {
-					canvas_size.x = target.getSize().x * scale;
-					canvas_size.y = target.getSize().y * scale;
+				if (TS_LOADER.LoadImage(filename, initial_size)) {
+					canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
+					canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 				}
 			}
 			is_settings_open = false;
@@ -86,10 +82,11 @@ void tileset::RenderUI()
 
 		ImGui::End();
 	}
+	// Property Begin()
 
-	ImGui::Text("dimension: %d x %d", target.getSize().x, target.getSize().y);
+	ImGui::Text("dimension: %d x %d", TS_LOADER.target.getSize().x, TS_LOADER.target.getSize().y);
 	
-	ImGui::Text("tile size: %.0f x %.0f", tile_size.x, tile_size.y);
+	ImGui::Text("tile size: %d x %d", TS_CURRENT.tsize.x, TS_CURRENT.tsize.y);
 
 	ImGui::Spacing();
 	ImGui::Spacing();
@@ -99,33 +96,35 @@ void tileset::RenderUI()
 
 	ImGui::SameLine();
 
-	ImGui::Text("count: %d [inx: %d]", hbuffer::count, hbuffer::index);
+	ImGui::Text("count: %d [inx: %d]", TS_LOADER.count, TS_LOADER.index);
 
 	ImGui::Spacing();
 	ImGui::Spacing();
 
 	if (ImGui::ArrowButton("##1", ImGuiDir_Left))
 	{
-		hbuffer::MovePointerL();
-		canvas_size.x = target.getSize().x * scale;
-		canvas_size.y = target.getSize().y * scale;
+		TS_LOADER.MovePointerL();
+		canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
+		canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 	}
 	ImGui::SameLine();
-	if (ImGui::SliderFloat("##0", &scale, 1.0f, 9.0f, "%.1f"))
+	if (ImGui::SliderFloat("##0", &TS_CURRENT.scale, 1.0f, 9.0f, "%.1f"))
 	{
-		canvas_size.x = target.getSize().x * scale;
-		canvas_size.y = target.getSize().y * scale;
+		canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
+		canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 	}
 	ImGui::SameLine();
 	if (ImGui::ArrowButton("##2", ImGuiDir_Right))
 	{
-		hbuffer::MovePointerR();
-		canvas_size.x = target.getSize().x * scale;
-		canvas_size.y = target.getSize().y * scale;
+		TS_LOADER.MovePointerR();
+		canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
+		canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 	}
 
 	ImGui::Spacing();
 	ImGui::Spacing();
+
+	// Property Canvas BeginChild()
 
 	ImGui::BeginChild("##", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Border, ImGuiWindowFlags_HorizontalScrollbar);
 
@@ -135,11 +134,21 @@ void tileset::RenderUI()
 	mouse_position.y = (ImGui::GetMousePos().y - canvas_min.y);
 
 	// irrespective of the zoom level later used by hidden buffer
-	if (mouse_position.x > 0 && mouse_position.y > 0) {
-		mouse_position.x /= scale;
-		mouse_position.y /= scale;
+	if (TS_LOADER.is_target_active && mouse_position.x > 0 && mouse_position.y > 0)
+	{
+		mouse_position.x /= TS_CURRENT.scale;
+		mouse_position.y /= TS_CURRENT.scale;
+
+		// gives the index
+		active_tile.x = mouse_position.x / TS_CURRENT.tsize.x;
+		active_tile.y = mouse_position.y / TS_CURRENT.tsize.y;
+
 	}
-	else { mouse_position = { 0.0f, 0.0f }; }
+	else {
+		TS_CURRENT.min = TS_CURRENT.max = { 0.0f, 0.0f };
+		mouse_position = { 0, 0 };
+		active_tile = { 0, 0 };
+	}
 
 	canvas_max = canvas_min;
 
@@ -147,14 +156,14 @@ void tileset::RenderUI()
 	canvas_max.y += canvas_size.y;
 
 	// grid size <lines>
-	grid_size.x = tile_size.x * scale;
-	grid_size.y = tile_size.y * scale;
+	grid_size.x = TS_CURRENT.tsize.x * TS_CURRENT.scale;
+	grid_size.y = TS_CURRENT.tsize.y * TS_CURRENT.scale;
 	
 	ImDrawList* dl = ImGui::GetWindowDrawList();
 
 	dl->AddRectFilled(canvas_min, canvas_max, IM_COL32(60, 60, 60, 255));
 
-	ImGui::Image(target, canvas_size);
+	ImGui::Image(TS_LOADER.target, canvas_size);
 	
 	// define the point and draw them
 	for (ImVec2 pt = canvas_min, pt2 = { canvas_max.x, canvas_min.y };
@@ -170,18 +179,14 @@ void tileset::RenderUI()
 		dl->AddLine(pt, pt2, IM_COL32(0, 0, 0, 255), 3.0F);
 	}
 
-	// above the image -> grids -> hover animation
-
+	if (TS_LOADER.is_target_active && mouse_position.x > 0 && mouse_position.y > 0) 
+	{
+		TS_CURRENT.min = canvas_min; TS_CURRENT.max = canvas_min;
+		TS_CURRENT.setTile(active_tile.x, active_tile.y);
+		
+		dl->AddRect(TS_CURRENT.min, TS_CURRENT.max, IM_COL32(255, 0, 0, 255), 0.0F, 0, 3.0F);
+	}
+	
 	ImGui::EndChild();
-}
-
-static void HoverAnim()
-{
-	// calculate min and max points of individual tiles
-	// see if mouse_position lies between any min and max points
-	// MAP THOSE min/max points to IDs <given individually to every tile>
-	// then again MAP THEM to the individual pixels itself
-
-	// such that min/max <=> IDs <=> pixels(tiles)
 
 }
