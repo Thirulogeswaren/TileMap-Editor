@@ -48,7 +48,7 @@ cmake -B build -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%/scripts/buildsystems/vcpkg.c
 cmake --build build --config Release
 ```
 
-## Building for Linux 
+## Building on Linux 
 
 make sure your linux distro have [cmake](https://cmake.org/) installed, if you are on debian or ubuntu based distribution run:
 
