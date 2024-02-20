@@ -28,14 +28,12 @@ Now download the project [source](https://github.com/madnesly/LevelEditor/archiv
 }
 ```
 
-open up Developer PowerShell for VS2022 and navigate to the directory which contains ``vcpkg.json`` file that you have created and run the following command:
+open up Developer PowerShell for VS2022 and navigate to the directory which contains ``vcpkg.json`` file that you have created and run:
 
 ```shell
 vcpkg x-update-baseline --add-initial-baseline
 ```
-this adds the **builtin-baseline** to the manifest file. Next run ```vcpkg install``` to install project dependencies, this will create ```vcpkg_installed``` folder and installs them there.
-
-Run the following commands:
+this adds the **builtin-baseline** to the manifest file, then run the following commands to build the project:
 
 ```shell
 mkdir build
