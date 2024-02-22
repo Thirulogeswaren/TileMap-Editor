@@ -1,18 +1,7 @@
-.gitignore
 
-# bin folders
-Debug
-Release
+# files to be ignored
 bin
 
-# cmake builds
-out
 build
+out
 
-# cmake settings
-CMakeSettings.json
-CMakePresets.json
-
-# manifest mode
-vcpkg_installed
-vcpkg.json

@@ -30,9 +30,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		COMMAND ${CMAKE_COMMAND} -E copy util/assets/imgui.ini bin/${CMAKE_BUILD_TYPE}
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 	)
+	
 	add_compile_definitions(_WIN32_ENTRY__CC)
 	add_executable(${PROJECT_NAME} WIN32 ${editor_src})
-else()
+
+else(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR "Darwin")
 	execute_process(
 		COMMAND ${CMAKE_COMMAND} -E copy util/assets/cousine.ttf bin
 		COMMAND ${CMAKE_COMMAND} -E copy util/assets/imgui.ini bin
