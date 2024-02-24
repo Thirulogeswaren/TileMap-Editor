@@ -1,3 +1,5 @@
+.vs
+.gitignore
 
 # files to be ignored
 bin

@@ -18,13 +18,13 @@ struct Editor
 
 void Editor::GuiUpdates()
 {
-	using namespace settings;
+	using namespace window_ui;
 
 	Console::Render();
 
-	ImGui::Begin("Properties");
-	
-	tileset::RenderUI();
+	ImGui::Begin("Inspector");
+
+	tileset::Inspector();
 
 	ImGui::End();
 }

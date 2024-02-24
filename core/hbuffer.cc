@@ -2,7 +2,6 @@
 #include "../util/console.h"
 
 #include <SFML/System/Vector3.hpp>
-#include <stdint.h>
 
 struct hbuffer
 {

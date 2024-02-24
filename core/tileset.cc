@@ -1,4 +1,4 @@
-#include "settings.h"
+#include "window_ui.h"
 
 #include "hbuffer.h"
 
@@ -7,20 +7,15 @@
 
 #include "nfd.h"
 
+namespace /* import settings */ {
+	std::string load_filename = {};
+	nfdresult_t load_state = NFD_ERROR;
+
+	bool is_locked = true;
+	bool is_active = false;
+}
+
 namespace {
-
-	bool is_settings_open = false;
-	bool settings_toggle = true;
-	nfdresult_t settings_result = NFD_ERROR;
-	constexpr ImGuiWindowFlags settings_flags{
-		ImGuiWindowFlags_NoDocking |
-		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoMove |
-		ImGuiWindowFlags_NoNavInputs |
-		ImGuiWindowFlags_NoCollapse
-	};
-
-	std::string filename;
 
 	// tileset canvas
 	ImVec2 canvas_min, canvas_max;
@@ -30,31 +25,37 @@ namespace {
 	
 }
 
-using namespace settings;
+using namespace window_ui;
 
-void tileset::RenderUI()
+void tileset::Inspector()
 {
 	// active only when loading texture
-	if (nfdchar_t* filepath = nullptr; is_settings_open)
+	if (nfdchar_t* filepath = nullptr; is_active)
 	{
 		static sf::Vector2i initial_size = { 8, 8 };
 		ImGui::SetNextWindowFocus();
 		ImGui::SetNextWindowPos(ImGui::GetWindowViewport()->GetCenter(), ImGuiCond_None, { 0.5,0.5 });
 		ImGui::SetNextWindowSize({ 250.0f, 150.0f }, ImGuiCond_FirstUseEver);
-		ImGui::Begin("Import Settings", nullptr, settings_flags);
-		ImGui::Text("tile width  "); ImGui::SameLine();
+		ImGui::Begin("Import Settings", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("tile width "); ImGui::SameLine();
 
-		if (ImGui::InputInt("##1", &initial_size.x))
-			if (settings_toggle) { initial_size.y = initial_size.x; }
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		if (ImGui::InputInt("##1", &initial_size.x, 0))
+			if (is_locked) { initial_size.y = initial_size.x; }
 		
-		ImGui::Text("tile height "); ImGui::SameLine();
+		ImGui::Spacing();
 
-		if (ImGui::InputInt("##2", &initial_size.y))
-			if (settings_toggle) { initial_size.x = initial_size.y; }
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("tile height"); ImGui::SameLine();
+
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		if (ImGui::InputInt("##2", &initial_size.y, 0))
+			if (is_locked) { initial_size.x = initial_size.y; }
 
 		ImGui::Spacing();
 		
-		ImGui::Checkbox("##3", &settings_toggle);
+		ImGui::Checkbox("##3", &is_locked);
 
 		ImGui::SameLine();
 
@@ -62,59 +63,85 @@ void tileset::RenderUI()
 		{
 			if (NFD_OpenDialog(nullptr, nullptr, &filepath) == NFD_OKAY)
 			{
-				settings_result = NFD_OKAY;
-				filename = { filepath };
+				load_state = NFD_OKAY;
+				load_filename = { filepath };
 			}
 		}
 
 		ImGui::SameLine();
 		
 		if (ImGui::Button("ok")) {
-			if (settings_result == NFD_OKAY) {
-				if (TS_LOADER.LoadImage(filename, initial_size)) {
+			if (load_state == NFD_OKAY) {
+				if (TS_LOADER.LoadImage(load_filename, initial_size)) {
 					canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
 					canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 				}
 			}
-			is_settings_open = false;
-			settings_result = NFD_ERROR;
+			is_active = false;
+			load_state = NFD_ERROR;
 		}
 
 		ImGui::End();
 	}
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
 	// Property Begin()
 
-	ImGui::Text("dimension: %d x %d", TS_LOADER.target.getSize().x, TS_LOADER.target.getSize().y);
-	
-	ImGui::Text("tile size: %d x %d", TS_CURRENT.tsize.x, TS_CURRENT.tsize.y);
-
-	ImGui::Spacing();
-	ImGui::Spacing();
-
-	if (ImGui::Button("load texture"))
-		is_settings_open = true;
-
+	ImGui::Text("Dimension");
 	ImGui::SameLine();
 
-	ImGui::Text("count: %d [inx: %d]", TS_LOADER.count, TS_LOADER.index);
+	ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("x ####").x);
+	ImGui::Text("x");
+	ImGui::SameLine();
+	ImGui::TextDisabled("%u", TS_LOADER.target.getSize().x);
+		
+	ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("y ####").x);
+	ImGui::Text("x");
+	ImGui::SameLine();
+	ImGui::TextDisabled("%u", TS_LOADER.target.getSize().y);
+
+	//ImGui::Separator();
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	ImGui::Text("Tile Size");
+	ImGui::SameLine();
+
+	ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("x ####").x);
+	ImGui::Text("x");
+	ImGui::SameLine();
+	ImGui::TextDisabled("%u", TS_CURRENT.tsize.x);
+
+	ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("y ####").x);
+	ImGui::Text("y"); ImGui::SameLine();
+	ImGui::TextDisabled("%u", TS_CURRENT.tsize.y);
 
 	ImGui::Spacing();
 	ImGui::Spacing();
 
-	if (ImGui::ArrowButton("##1", ImGuiDir_Left))
+	if (ImGui::Button("load tileset"))
+		is_active = true;
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	if (ImGui::ArrowButton("##l", ImGuiDir_Left))
 	{
 		TS_LOADER.MovePointerL();
 		canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
 		canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 	}
 	ImGui::SameLine();
-	if (ImGui::SliderFloat("##0", &TS_CURRENT.scale, 1.0f, 9.0f, "%.1f"))
+	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 35.0f);
+	if (ImGui::SliderFloat("##f", &TS_CURRENT.scale, 1.0f, 9.0f, "%.1f"))
 	{
 		canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
 		canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 	}
 	ImGui::SameLine();
-	if (ImGui::ArrowButton("##2", ImGuiDir_Right))
+	if (ImGui::ArrowButton("##r", ImGuiDir_Right))
 	{
 		TS_LOADER.MovePointerR();
 		canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
@@ -124,10 +151,9 @@ void tileset::RenderUI()
 	ImGui::Spacing();
 	ImGui::Spacing();
 
-	// Property Canvas BeginChild()
+	// Tileset Canvas BeginChild()
 
-	ImGui::BeginChild("##", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Border, ImGuiWindowFlags_HorizontalScrollbar);
-
+	ImGui::BeginChild("##v", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Border, ImGuiWindowFlags_HorizontalScrollbar);
 	canvas_min = ImGui::GetCursorScreenPos();
 
 	mouse_position.x = (ImGui::GetMousePos().x - canvas_min.x);
@@ -136,8 +162,10 @@ void tileset::RenderUI()
 	// irrespective of the zoom level later used by hidden buffer
 	if (TS_LOADER.is_target_active && mouse_position.x > 0 && mouse_position.y > 0)
 	{
-		mouse_position.x /= TS_CURRENT.scale;
-		mouse_position.y /= TS_CURRENT.scale;
+		if (TS_CURRENT.scale >= 1.0f) {
+			mouse_position.x /= TS_CURRENT.scale;
+			mouse_position.y /= TS_CURRENT.scale;
+		}
 
 		// gives the index
 		active_tile.x = mouse_position.x / TS_CURRENT.tsize.x;

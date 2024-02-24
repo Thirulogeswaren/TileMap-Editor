@@ -14,7 +14,7 @@ find_package(ImGui-SFML CONFIG REQUIRED)
 find_package(unofficial-nativefiledialog CONFIG REQUIRED)
 
 set(editor_src editor.cc
-	core/settings.cc
+	core/tileset.cc
 	core/hbuffer.cc
 	
 	util/console.cc
