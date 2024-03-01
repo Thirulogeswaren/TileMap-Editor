@@ -16,6 +16,7 @@ find_package(unofficial-nativefiledialog CONFIG REQUIRED)
 set(editor_src editor.cc
 	core/tileset.cc
 	core/hbuffer.cc
+	core/world.cc
 	
 	util/console.cc
 )
@@ -31,8 +32,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 	)
 	
-	add_compile_definitions(_WIN32_ENTRY__CC)
-	add_executable(${PROJECT_NAME} WIN32 ${editor_src})
+	# add_compile_definitions(_WIN32_ENTRY__CC)
+	add_executable(${PROJECT_NAME} ${editor_src})
 
 else(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR "Darwin")
 	execute_process(

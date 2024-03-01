@@ -7,15 +7,14 @@
 
 #include "nfd.h"
 
-namespace /* import settings */ {
-	std::string load_filename = {};
-	nfdresult_t load_state = NFD_ERROR;
-
-	bool is_locked = true;
-	bool is_active = false;
-}
-
 namespace {
+
+	// import settings
+	nfdchar_t*  nfd_filepath = nullptr;
+	nfdresult_t nfd_result = NFD_ERROR;
+
+	bool lock_enabled = true;
+
 
 	// tileset canvas
 	ImVec2 canvas_min, canvas_max;
@@ -30,19 +29,18 @@ using namespace window_ui;
 void tileset::Inspector()
 {
 	// active only when loading texture
-	if (nfdchar_t* filepath = nullptr; is_active)
-	{
-		static sf::Vector2i initial_size = { 8, 8 };
+	if (static sf::Vector2i initial_size{ 8, 8 }; settings::import_enabled) {
+		
 		ImGui::SetNextWindowFocus();
 		ImGui::SetNextWindowPos(ImGui::GetWindowViewport()->GetCenter(), ImGuiCond_None, { 0.5,0.5 });
 		ImGui::SetNextWindowSize({ 250.0f, 150.0f }, ImGuiCond_FirstUseEver);
-		ImGui::Begin("Import Settings", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+		ImGui::Begin("Import Settings", nullptr, settings::flags);
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text("tile width "); ImGui::SameLine();
 
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 		if (ImGui::InputInt("##1", &initial_size.x, 0))
-			if (is_locked) { initial_size.y = initial_size.x; }
+			if (lock_enabled) { initial_size.y = initial_size.x; }
 		
 		ImGui::Spacing();
 
@@ -51,34 +49,30 @@ void tileset::Inspector()
 
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 		if (ImGui::InputInt("##2", &initial_size.y, 0))
-			if (is_locked) { initial_size.x = initial_size.y; }
+			if (lock_enabled) { initial_size.x = initial_size.y; }
 
 		ImGui::Spacing();
 		
-		ImGui::Checkbox("##3", &is_locked);
+		ImGui::Checkbox("##3", &lock_enabled);
 
 		ImGui::SameLine();
 
-		if (ImGui::Button("browse"))
-		{
-			if (NFD_OpenDialog(nullptr, nullptr, &filepath) == NFD_OKAY)
-			{
-				load_state = NFD_OKAY;
-				load_filename = { filepath };
-			}
+		if (ImGui::Button("browse")) {
+			if (NFD_OpenDialog(nullptr, nullptr, &nfd_filepath) == NFD_OKAY)
+				nfd_result = NFD_OKAY;
 		}
 
 		ImGui::SameLine();
 		
 		if (ImGui::Button("ok")) {
-			if (load_state == NFD_OKAY) {
-				if (TS_LOADER.LoadImage(load_filename, initial_size)) {
+			if (nfd_result == NFD_OKAY) {
+				if (TS_LOADER.LoadImage(nfd_filepath, initial_size)) {
 					canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
 					canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 				}
 			}
-			is_active = false;
-			load_state = NFD_ERROR;
+			settings::import_enabled = false;
+			nfd_result = NFD_ERROR;
 		}
 
 		ImGui::End();
@@ -122,14 +116,29 @@ void tileset::Inspector()
 	ImGui::Spacing();
 
 	if (ImGui::Button("load tileset"))
-		is_active = true;
+		settings::import_enabled = true;
+
+	ImGui::Spacing();
+	ImGui::Spacing();
+
+	ImGui::Text("Tile Index");
+	ImGui::SameLine();
+
+	ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("x ####").x);
+	ImGui::Text("x");
+	ImGui::SameLine();
+	ImGui::TextDisabled("%u", active_tile.x);
+
+	ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("y ####").x);
+	ImGui::Text("y"); ImGui::SameLine();
+	ImGui::TextDisabled("%u", active_tile.y);
 
 	ImGui::Spacing();
 	ImGui::Spacing();
 
 	if (ImGui::ArrowButton("##l", ImGuiDir_Left))
 	{
-		TS_LOADER.MovePointerL();
+		TS_LOADER.PrevTileset();
 		canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
 		canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 	}
@@ -143,7 +152,7 @@ void tileset::Inspector()
 	ImGui::SameLine();
 	if (ImGui::ArrowButton("##r", ImGuiDir_Right))
 	{
-		TS_LOADER.MovePointerR();
+		TS_LOADER.NextTileset();
 		canvas_size.x = TS_LOADER.target.getSize().x * TS_CURRENT.scale;
 		canvas_size.y = TS_LOADER.target.getSize().y * TS_CURRENT.scale;
 	}
@@ -171,9 +180,11 @@ void tileset::Inspector()
 		active_tile.x = mouse_position.x / TS_CURRENT.tsize.x;
 		active_tile.y = mouse_position.y / TS_CURRENT.tsize.y;
 
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+			tileset::TilePicker();
 	}
 	else {
-		TS_CURRENT.min = TS_CURRENT.max = { 0.0f, 0.0f };
+		TS_CURRENT.min = TS_CURRENT.max = { 0, 0 };
 		mouse_position = { 0, 0 };
 		active_tile = { 0, 0 };
 	}

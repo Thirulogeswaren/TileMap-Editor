@@ -16,10 +16,11 @@ struct Editor
 	sf::Clock delta_time;
 };
 
+using namespace window_ui;
+sf::RectangleShape rshape{ sf::Vector2f{200.f,200.f } };
+
 void Editor::GuiUpdates()
 {
-	using namespace window_ui;
-
 	Console::Render();
 
 	ImGui::Begin("Inspector");
@@ -27,6 +28,8 @@ void Editor::GuiUpdates()
 	tileset::Inspector();
 
 	ImGui::End();
+
+	world::MenuBar();
 }
 
 Editor::Editor() : delta_time{} {
@@ -68,6 +71,27 @@ int main()
 
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 				window.close();
+
+			if (event.type == sf::Event::Resized)
+			{
+				Console::LogMessage("Window Resized");
+				sf::FloatRect nRect = {
+					0.f, 0.f,
+					ImGui::GetIO().DisplaySize.x,
+					ImGui::GetIO().DisplaySize.y
+				};
+				window.setView(sf::View{ nRect });
+			}
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+				world::viewport.move(sf::Vector2f{ -200.0f, 0.0f });
+				window.setView(world::viewport);
+			}
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+				world::viewport.move(sf::Vector2f{ 200.0f, 0.0f });
+				window.setView(world::viewport);
+			}
 		}
 
 		ImGui::SFML::Update(window, dt.restart());
@@ -75,9 +99,16 @@ int main()
 		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 		core.GuiUpdates();
 
+		world::tile.setPosition(
+			window.mapPixelToCoords(sf::Mouse::getPosition(window))
+		);
+
 
 		// Render States
 		window.clear(sf::Color::Black);
+
+		window.draw(world::tile);
+		window.draw(rshape);
 
 		ImGui::SFML::Render(window);
 		window.display();

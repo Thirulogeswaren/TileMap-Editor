@@ -13,8 +13,8 @@ public:
 
 	bool LoadImage(std::string_view filepath, const sf::Vector2i& tilesize);
 
-	void MovePointerL();
-	void MovePointerR();
+	void PrevTileset();
+	void NextTileset();
 
 	static TilesetLoader& Instance()
 	{
@@ -28,10 +28,10 @@ private:
 };
 
 inline struct live_properties {
-	sf::Vector2u tsize = { 8u, 8u };
+	sf::Vector2i tsize = { 8, 8 };
 
-	sf::Vector2f min = { 0.0f, 0.0f };
-	sf::Vector2f max = { 0.0f, 0.0f };
+	sf::Vector2i min = { 0, 0 };
+	sf::Vector2i max = { 0, 0 };
 	size_t u_id = 0;
 
 	float scale = 2.0f;

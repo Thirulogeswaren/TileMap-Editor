@@ -6,16 +6,16 @@
 struct hbuffer
 {
 	sf::Image image;
-	sf::Vector2u tilesz;
+	sf::Vector2i tilesz;
 	float zoom_level;
 
-	hbuffer() : image{ }, tilesz{ 8u, 8u }, zoom_level{ 1.5f } { }
+	hbuffer() : image{ }, tilesz{ 8, 8 }, zoom_level{ 1.5f } { }
 };
 
 struct tile_properties {
 	std::vector<sf::Vector3i> unique_id;
-	std::vector<sf::Vector2f> min;
-	std::vector<sf::Vector2f> max;
+	std::vector<sf::Vector2i> min;
+	std::vector<sf::Vector2i> max;
 };
 
 
@@ -50,7 +50,7 @@ static void update_current_tileset()
 	TS_CURRENT.tsize.x = c_tileset[TS_LOADER.index].tilesz.x;
 	TS_CURRENT.tsize.y = c_tileset[TS_LOADER.index].tilesz.y;
 	TS_CURRENT.scale = c_tileset[TS_LOADER.index].zoom_level;
-	TS_CURRENT.min = TS_CURRENT.max = { 0.0f, 0.0f };
+	TS_CURRENT.min = TS_CURRENT.max = { 0, 0 };
 	TS_CURRENT.u_id = 0;
 }
 
@@ -82,17 +82,17 @@ bool TilesetLoader::LoadImage(std::string_view filepath, const sf::Vector2i& til
 		tile_props[index].max.reserve(tiles_present);
 
 		// calculate the tile 's min-max points
-		auto&[tsize_x, tsize_y] = c_tileset[index].tilesz;
+		auto&[tx, ty] = c_tileset[index].tilesz;
 
 		sf::Vector3i unique_set = { 0, 0, 0 };
-		for (sf::Vector2f tmin{ 0.0f, 0.0f }, tmax{ (float)tsize_x, (float)tsize_y };
+		for (sf::Vector2i tmin{ 0, 0 }, tmax{ tx, ty };
 			unique_set.z < tiles_present;
-			unique_set.z++, unique_set.x++, tmin.x += tsize_x, tmax.x += tsize_y)
+			unique_set.z++, unique_set.x++, tmin.x += tx, tmax.x += tx)
 		{
 			if (!(unique_set.x < tiles_in_x))
 			{
-				tmin.x = 0; tmin.y += tsize_y;
-				tmax.x = tsize_x; tmax.y += tsize_y;
+				tmin.x = 0; tmin.y += ty;
+				tmax.x = tx; tmax.y += ty;
 
 				unique_set.y++;
 				unique_set.x = 0;
@@ -121,7 +121,7 @@ bool TilesetLoader::LoadImage(std::string_view filepath, const sf::Vector2i& til
 	return false;
 }
 
-void TilesetLoader::MovePointerR()
+void TilesetLoader::NextTileset()
 {
 	if (c_tileset.empty()) return;
 
@@ -129,7 +129,7 @@ void TilesetLoader::MovePointerR()
 	update_current_tileset();
 }
 
-void TilesetLoader::MovePointerL()
+void TilesetLoader::PrevTileset()
 {
 	if (c_tileset.empty()) return;
 
@@ -148,11 +148,27 @@ void live_properties::setTile(const int x, const int y)
 			TS_CURRENT.u_id = unique_set.z;
 	}
 		
-	TS_CURRENT.min += (
-		tile_props[TS_LOADER.index].min[TS_CURRENT.u_id] * TS_CURRENT.scale
-	);
+	TS_CURRENT.min.x += tile_props[TS_LOADER.index].min[TS_CURRENT.u_id].x * TS_CURRENT.scale;
+	TS_CURRENT.min.y += tile_props[TS_LOADER.index].min[TS_CURRENT.u_id].y * TS_CURRENT.scale;
 
-	TS_CURRENT.max += (
-		tile_props[TS_LOADER.index].max[TS_CURRENT.u_id] * TS_CURRENT.scale
+	TS_CURRENT.max.x += tile_props[TS_LOADER.index].max[TS_CURRENT.u_id].x * TS_CURRENT.scale;
+	TS_CURRENT.max.y += tile_props[TS_LOADER.index].max[TS_CURRENT.u_id].y * TS_CURRENT.scale;
+}
+
+#include "window_ui.h"
+
+static sf::Texture TilePart{};
+
+void window_ui::tileset::TilePicker()
+{
+	world::tile.setTexture(TS_LOADER.target, true);
+	world::tile.setTextureRect(sf::IntRect
+		{
+			tile_props[TS_LOADER.index].min[TS_CURRENT.u_id].x,
+			tile_props[TS_LOADER.index].min[TS_CURRENT.u_id].y,
+			TS_CURRENT.tsize.x,
+			TS_CURRENT.tsize.y
+		}
 	);
+	world::tile.setScale(sf::Vector2f{ 3.0f, 3.0f });
 }
