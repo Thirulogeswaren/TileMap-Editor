@@ -1,36 +1,25 @@
-#include "editor.h"
+#include "include/editor.h"
 
 #include "imgui.h"
 #include "imgui-SFML.h"
 
-#include "SFML/Graphics.hpp"
+#include "SFML/Graphics/RenderWindow.hpp"
+#include "SFML/Window/Event.hpp"
+
+#if defined(_WIN32) && (_MSC_VER)
+#define entry_point WinMain
+#else
+#define entry_point main
+#endif
 
 struct Editor
 {
-	void GuiUpdates();
-
 	Editor();
 	~Editor();
 
 	sf::RenderWindow window;
 	sf::Clock delta_time;
 };
-
-using namespace window_ui;
-sf::RectangleShape rshape{ sf::Vector2f{200.f,200.f } };
-
-void Editor::GuiUpdates()
-{
-	Console::Render();
-
-	ImGui::Begin("Inspector");
-
-	tileset::Inspector();
-
-	ImGui::End();
-
-	world::MenuBar();
-}
 
 Editor::Editor() : delta_time{} {
 
@@ -50,11 +39,7 @@ Editor::~Editor()
 	ImGui::SFML::Shutdown();
 }
 
-#ifdef _WIN32_ENTRY__CC
-int WinMain()
-#else
 int main()
-#endif
 {
 	Editor core; sf::Event event{};
 
@@ -82,35 +67,31 @@ int main()
 				};
 				window.setView(sf::View{ nRect });
 			}
-
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-				world::viewport.move(sf::Vector2f{ -200.0f, 0.0f });
-				window.setView(world::viewport);
-			}
-
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-				world::viewport.move(sf::Vector2f{ 200.0f, 0.0f });
-				window.setView(world::viewport);
-			}
 		}
 
 		ImGui::SFML::Update(window, dt.restart());
 
-		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
-		core.GuiUpdates();
-
-		world::tile.setPosition(
-			window.mapPixelToCoords(sf::Mouse::getPosition(window))
+		ImGui::DockSpaceOverViewport(
+			ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode
 		);
 
+		// ImGui Begin() && End() calls
+
+		Console::Render();
+
+		window::MenuBar();
+
+		window::Inspector();
+		
+		window::Viewport();
 
 		// Render States
 		window.clear(sf::Color::Black);
 
-		window.draw(world::tile);
-		window.draw(rshape);
 
 		ImGui::SFML::Render(window);
 		window.display();
 	}
+
+	return EXIT_SUCCESS;
 }
