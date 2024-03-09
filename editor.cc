@@ -39,7 +39,7 @@ Editor::~Editor()
 	ImGui::SFML::Shutdown();
 }
 
-int main()
+int entry_point()
 {
 	Editor core; sf::Event event{};
 

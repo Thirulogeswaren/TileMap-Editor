@@ -165,7 +165,7 @@ void window::Inspector()
 
 	ImGui::BeginChild("##v", ImGui::GetContentRegionAvail(), ImGuiChildFlags_Border, ImGuiWindowFlags_HorizontalScrollbar);
 	
-	canvas_min = ImGui::GetCursorScreenPos();
+	canvas_min = { ImGui::GetCursorScreenPos().x, ImGui::GetCursorScreenPos().y };
 
 	mouse_position.x = (ImGui::GetMousePos().x - canvas_min.x);
 	mouse_position.y = (ImGui::GetMousePos().y - canvas_min.y);
@@ -182,8 +182,9 @@ void window::Inspector()
 		tile_index.x = mouse_position.x / TS_CURRENT.tilesize.x;
 		tile_index.y = mouse_position.y / TS_CURRENT.tilesize.y;
 
-		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-			TS_CURRENT.PickingTile();
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+			TS_CURRENT.PickingTile(tile_index.x, tile_index.y);
+		}
 	}
 	else {
 		TS_CURRENT.min = TS_CURRENT.max = { 0u, 0u };
@@ -200,25 +201,25 @@ void window::Inspector()
 	grid_size.x = TS_CURRENT.tilesize.x * TS_CURRENT.scale;
 	grid_size.y = TS_CURRENT.tilesize.y * TS_CURRENT.scale;
 	
-	ImDrawList* dl = ImGui::GetWindowDrawList();
-
-	dl->AddRectFilled(canvas_min, canvas_max, IM_COL32(0, 0, 0, 255));
-
 	ImGui::Image(TS_LOADER.target, canvas_size);
 	
 	// define the point and draw them
-	for (ImVec2 pt{ canvas_min }, pt2{ canvas_max.x, canvas_min.y };
+	for (vector2f pt{ canvas_min }, pt2{ canvas_max.x, canvas_min.y };
 		pt.y <= canvas_max.y && pt2.y <= canvas_max.y;
 		pt.y += grid_size.y, pt2.y += grid_size.y)
 	{
-		dl->AddLine(pt, pt2, IM_COL32(0, 0, 0, 255), 3.0f);
+		ImGui::GetWindowDrawList()->AddLine(
+			{ pt.x, pt.y }, { pt2.x,pt2.y }, IM_COL32(0, 0, 0, 255), 3.0f
+		);
 	}
 
-	for (ImVec2 pt{ canvas_min }, pt2{ canvas_min.x, canvas_max.y };
+	for (vector2f pt{ canvas_min }, pt2{ canvas_min.x, canvas_max.y };
 		pt.x <= canvas_max.x && pt2.x <= canvas_max.x;
 		pt.x += grid_size.x, pt2.x += grid_size.x)
 	{
-		dl->AddLine(pt, pt2, IM_COL32(0, 0, 0, 255), 3.0f);
+		ImGui::GetWindowDrawList()->AddLine(
+			{ pt.x, pt.y }, { pt2.x,pt2.y }, IM_COL32(0, 0, 0, 255), 3.0f
+		);
 	}
 	
 
@@ -226,8 +227,11 @@ void window::Inspector()
 	{
 		TS_CURRENT.min = canvas_min; TS_CURRENT.max = canvas_min;
 		TS_CURRENT.HoveringTile(tile_index.x, tile_index.y);
-		
-		dl->AddRect(TS_CURRENT.min, TS_CURRENT.max, IM_COL32(255, 0, 0, 255), 0.0F, 0, 3.0F);
+
+		ImGui::GetWindowDrawList()->AddRect(
+			{ TS_CURRENT.min.x, TS_CURRENT.min.y }, { TS_CURRENT.max.x,  TS_CURRENT.max.y },
+			IM_COL32(255, 0, 0, 255), 0.0F, 0, 3.0F
+		);
 	}
 	
 	ImGui::EndChild();

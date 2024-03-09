@@ -1,27 +1,27 @@
 #include "ts_loader.h"
 #include "util/console.h"
 
+#include <unordered_map>
+
 struct tileset
 {
 	vector2u	m_size{};
+	vector2u	m_tiles_in{};
 	float		m_scale{};
 
 	sf::Image	m_image{};
+
+	std::unordered_map<uint16_t, TilePoints> m_points{};
 };
-
-struct tile_properties {
-	std::vector<vector3u> unique_id;
-	std::vector<vector2u> min;
-	std::vector<vector2u> max;
-};
-
-
-#include <unordered_map>
 
 static std::vector<tileset> c_tileset;
-static std::unordered_map<size_t, tile_properties> c_tileprops;
 
-TilesetLoader::TilesetLoader() : target{}, target_state{ false }, index { 0 }, count{ 0 }
+sf::Image& TilesetLoader::GetTilesetImage()
+{
+	return c_tileset[index].m_image;
+}
+
+TilesetLoader::TilesetLoader() : target{}, target_state{ false }, index{ 0 }, count{ 0 }
 {
 	Console::LogMessage("TS_LOADER active");
 	c_tileset.reserve(30);
@@ -40,10 +40,11 @@ void TilesetLoader::update_current_tileset()
 
 	// set the current properties
 	target_state = { target.loadFromImage(c_tileset[index].m_image) };
-
+	
 	TS_CURRENT.tilesize.x = c_tileset[index].m_size.x;
 	TS_CURRENT.tilesize.y = c_tileset[index].m_size.y;
 	TS_CURRENT.scale = c_tileset[index].m_scale;
+
 	TS_CURRENT.min = TS_CURRENT.max = { 0, 0 };
 	TS_CURRENT.u_id = 0;
 }
@@ -57,10 +58,10 @@ bool TilesetLoader::LoadImage(std::string_view filepath, const vector2u& tilesiz
 
 		temp.m_scale = 3.0f;
 
-		auto tiles_in_x = temp.m_image.getSize().x / temp.m_size.x;
-		auto tiles_in_y = temp.m_image.getSize().y / temp.m_size.y;
+		temp.m_tiles_in.x = temp.m_image.getSize().x / temp.m_size.x;
+		temp.m_tiles_in.y = temp.m_image.getSize().y / temp.m_size.y;
 
-		uint16_t tiles_present = tiles_in_x * tiles_in_y;
+		uint16_t tiles_present = temp.m_tiles_in.x * temp.m_tiles_in.y;
 
 		if (!c_tileset.empty())
 			c_tileset[TS_LOADER.index].m_scale = TS_CURRENT.scale;
@@ -73,10 +74,6 @@ bool TilesetLoader::LoadImage(std::string_view filepath, const vector2u& tilesiz
 		// set active texture properties
 		update_current_tileset();
 
-		c_tileprops[index].unique_id.reserve(tiles_present);
-		c_tileprops[index].min.reserve(tiles_present);
-		c_tileprops[index].max.reserve(tiles_present);
-
 		// calculate the tile 's min-max points
 		auto& [tx, ty] = c_tileset[index].m_size;
 
@@ -85,7 +82,7 @@ bool TilesetLoader::LoadImage(std::string_view filepath, const vector2u& tilesiz
 			unique_set.z < tiles_present;
 			unique_set.z++, unique_set.x++, tmin.x += tx, tmax.x += tx)
 		{
-			if (!(unique_set.x < tiles_in_x))
+			if (!(unique_set.x < temp.m_tiles_in.x))
 			{
 				tmin.x = 0; tmin.y += ty;
 				tmax.x = tx; tmax.y += ty;
@@ -94,15 +91,8 @@ bool TilesetLoader::LoadImage(std::string_view filepath, const vector2u& tilesiz
 				unique_set.x = 0;
 			}
 
-			c_tileprops[index].unique_id.push_back(vector3u
-				{
-					unique_set.x, unique_set.y, unique_set.z
-				}
-			);
-
-			c_tileprops[index].min.push_back(tmin);
-			c_tileprops[index].max.push_back(tmax);
-
+			c_tileset[index].m_points[unique_set.z].min = tmin;
+			c_tileset[index].m_points[unique_set.z].max = tmax;
 		}
 
 		if (TS_CURRENT.tilesize.x >= TS_LOADER.target.getSize().x ||
@@ -134,30 +124,55 @@ void TilesetLoader::PrevTileset()
 }
 
 // unique_set -> index and u_id
-void live_properties::HoveringTile(const int x, const int y)
+void live_properties::HoveringTile(const uint16_t x, const uint16_t y)
 {
-	if (c_tileprops[TS_LOADER.index].unique_id.empty()) { return; }
+	static uint16_t active_id{};
 
-	for (const auto& unique_set : c_tileprops[TS_LOADER.index].unique_id)
+	const auto& [tiles_in_x, tiles_in_y] = c_tileset[TS_LOADER.index].m_tiles_in;
+
+	if (x >= tiles_in_x || y >= tiles_in_y)
 	{
-		if (unique_set.x == x && unique_set.y == y)
-			TS_CURRENT.u_id = unique_set.z;
+		active_id = 0u;
 	}
-		
-	TS_CURRENT.min.x += c_tileprops[TS_LOADER.index].min[TS_CURRENT.u_id].x * TS_CURRENT.scale;
-	TS_CURRENT.min.y += c_tileprops[TS_LOADER.index].min[TS_CURRENT.u_id].y * TS_CURRENT.scale;
+	else if (TS_CURRENT.u_id = x; y > 0) {
+		active_id = x + (tiles_in_x * y);
+	}
+	else {
+		active_id = x;
+	}
 
-	TS_CURRENT.max.x += c_tileprops[TS_LOADER.index].max[TS_CURRENT.u_id].x * TS_CURRENT.scale;
-	TS_CURRENT.max.y += c_tileprops[TS_LOADER.index].max[TS_CURRENT.u_id].y * TS_CURRENT.scale;
+
+	TS_CURRENT.min.x += c_tileset[TS_LOADER.index].m_points[active_id].min.x * TS_CURRENT.scale;
+	TS_CURRENT.min.y += c_tileset[TS_LOADER.index].m_points[active_id].min.y * TS_CURRENT.scale;
+
+	TS_CURRENT.max.x += c_tileset[TS_LOADER.index].m_points[active_id].max.x * TS_CURRENT.scale;
+	TS_CURRENT.max.y += c_tileset[TS_LOADER.index].m_points[active_id].max.y * TS_CURRENT.scale;
 }
 
-void live_properties::PickingTile()
+void live_properties::PickingTile(const uint16_t x, const uint16_t y)
 {
+	const auto& [tiles_in_x, tiles_in_y] = c_tileset[TS_LOADER.index].m_tiles_in;
+
+	// sets the TS_CURRENT->u_id 
+	if (x >= tiles_in_x || y >= tiles_in_y)
+	{
+		TS_CURRENT.u_id = 0u;
+	}
+	else if (TS_CURRENT.u_id = x; y > 0) {
+		TS_CURRENT.u_id = x + (tiles_in_x * y);
+	}
+	else {
+		TS_CURRENT.u_id = 0u;
+	}
+
+	TS_LOADER.to_draw.min = c_tileset[TS_LOADER.index].m_points[TS_CURRENT.u_id].min;
+	TS_LOADER.to_draw.max = c_tileset[TS_LOADER.index].m_points[TS_CURRENT.u_id].max;
+
 	live_part.setTexture(TS_LOADER.target, true);
 	live_part.setTextureRect(sf::IntRect
 		{
-			c_tileprops[TS_LOADER.index].min[TS_CURRENT.u_id].x,
-			c_tileprops[TS_LOADER.index].min[TS_CURRENT.u_id].y,
+			c_tileset[TS_LOADER.index].m_points[TS_CURRENT.u_id].min.x,
+			c_tileset[TS_LOADER.index].m_points[TS_CURRENT.u_id].min.y,
 			TS_CURRENT.tilesize.x,
 			TS_CURRENT.tilesize.y
 		}

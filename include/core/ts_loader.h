@@ -3,15 +3,24 @@
 
 #include "custom_types.h"
 
+struct TilePoints {
+	vector2u min{};
+	vector2u max{};
+};
+
 class TilesetLoader {
 public:
 	sf::Texture target{};
 	bool target_state{};
 
+	TilePoints to_draw{};
+
 	int index{};
 	int count{};
 
 	bool LoadImage(std::string_view filepath, const vector2u& tilesize);
+
+	sf::Image& GetTilesetImage();
 
 	void PrevTileset();
 	void NextTileset();
@@ -31,7 +40,6 @@ private:
 
 inline struct live_properties {
 	vector2u tilesize{ 8u, 8u };
-
 	uint16_t u_id{};
 
 	vector2f min{};
@@ -41,9 +49,9 @@ inline struct live_properties {
 
 	sf::Sprite live_part{};
 
-	void HoveringTile(const int x, const int y);
+	void HoveringTile(const uint16_t x, const uint16_t y);
 
-	void PickingTile();
+	void PickingTile(const uint16_t x, const uint16_t y);
 
 } current;
 

@@ -5,21 +5,26 @@
 
 #include "SFML/Graphics/RenderTexture.hpp"
 
-inline sf::RenderTexture umap;
+inline struct map_handler {
 
-inline struct map_handler
-{
-	vector2u map_tilepresent{};
+	vector2u map_tilepresent{ 1u, 1u };
 	vector2u map_tilesize{ 8u, 8u };
 
-	vector2f map_dimension{};
-	vector2f index;
+	vector2u map_dimension{};
+	vector2u index{};
 
+	bool map_state{};
+
+	sf::Texture& GetFinalMap();
+	
+	void PlaceTile();
+	
 	void CreateMap(const vector2u& tiles_in, const vector2u& size);
 
-	void PlaceTile();
+	void SaveMap();
 
-} map_properties;
+
+} map_properties{};
 
 #define CURRENT_MAP map_properties
 
