@@ -1,6 +1,6 @@
-# Level Editor
+# TileMap Editor
 
-making a general tile map editor with some new features... (unnamed) editor
+making a general tile map editor ...
 
 ## Project Dependencies
 - [Dear ImGui](https://github.com/ocornut/imgui)
@@ -46,7 +46,7 @@ Download [vcpkg](https://vcpkg.io/en/getting-started) to install project depende
 vcpkg install imgui-sfml nativefiledialog imgui[docking-experimental]
 ```
 
-Now download the project [source](https://github.com/madnesly/LevelEditor/archive/refs/heads/main.zip) and extract them by running ```unzip Level-Editor-main.zip```, then run the following commands to build the project:
+Now download the project [source](https://github.com/madnesly/LevelEditor/archive/refs/heads/main.zip) and extract them by running ```unzip [filename].zip```, then run the following commands to build the project:
 
 ```shell
 cd Level-Editor-main
