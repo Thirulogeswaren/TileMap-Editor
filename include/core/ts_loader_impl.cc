@@ -134,13 +134,9 @@ void live_properties::HoveringTile(const uint16_t x, const uint16_t y)
 	{
 		active_id = 0u;
 	}
-	else if (TS_CURRENT.u_id = x; y > 0) {
+	else if (active_id = x; y > 0) {
 		active_id = x + (tiles_in_x * y);
 	}
-	else {
-		active_id = x;
-	}
-
 
 	TS_CURRENT.min.x += c_tileset[TS_LOADER.index].m_points[active_id].min.x * TS_CURRENT.scale;
 	TS_CURRENT.min.y += c_tileset[TS_LOADER.index].m_points[active_id].min.y * TS_CURRENT.scale;
@@ -154,16 +150,13 @@ void live_properties::PickingTile(const uint16_t x, const uint16_t y)
 	const auto& [tiles_in_x, tiles_in_y] = c_tileset[TS_LOADER.index].m_tiles_in;
 
 	// sets the TS_CURRENT->u_id 
-	if (x >= tiles_in_x || y >= tiles_in_y)
-	{
+	if (x >= tiles_in_x || y >= tiles_in_y) {
 		TS_CURRENT.u_id = 0u;
 	}
 	else if (TS_CURRENT.u_id = x; y > 0) {
 		TS_CURRENT.u_id = x + (tiles_in_x * y);
 	}
-	else {
-		TS_CURRENT.u_id = 0u;
-	}
+
 
 	TS_LOADER.to_draw.min = c_tileset[TS_LOADER.index].m_points[TS_CURRENT.u_id].min;
 	TS_LOADER.to_draw.max = c_tileset[TS_LOADER.index].m_points[TS_CURRENT.u_id].max;

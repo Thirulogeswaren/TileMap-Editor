@@ -93,7 +93,7 @@ void window::Inspector()
 	ImGui::TextDisabled("%u", TS_LOADER.target.getSize().x);
 		
 	ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("y ####").x);
-	ImGui::Text("x");
+	ImGui::Text("y");
 	ImGui::SameLine();
 	ImGui::TextDisabled("%u", TS_LOADER.target.getSize().y);
 
@@ -118,21 +118,6 @@ void window::Inspector()
 
 	if (ImGui::Button("load tileset"))
 		import_enabled = true;
-
-	ImGui::Spacing();
-	ImGui::Spacing();
-
-	ImGui::Text("Tile Index");
-	ImGui::SameLine();
-
-	ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("x ####").x);
-	ImGui::Text("x");
-	ImGui::SameLine();
-	ImGui::TextDisabled("%u", tile_index.x);
-
-	ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("y ####").x);
-	ImGui::Text("y"); ImGui::SameLine();
-	ImGui::TextDisabled("%u", tile_index.y);
 
 	ImGui::Spacing();
 	ImGui::Spacing();
@@ -182,7 +167,7 @@ void window::Inspector()
 		tile_index.x = mouse_position.x / TS_CURRENT.tilesize.x;
 		tile_index.y = mouse_position.y / TS_CURRENT.tilesize.y;
 
-		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+		if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
 			TS_CURRENT.PickingTile(tile_index.x, tile_index.y);
 		}
 	}

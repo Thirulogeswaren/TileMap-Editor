@@ -37,10 +37,8 @@ void map_handler::CreateMap(const vector2u& tiles_in, const vector2u& size)
 	CURRENT_MAP.map_tilepresent = tiles_in;
 	CURRENT_MAP.map_tilesize = size;
 
-	CURRENT_MAP.map_dimension = {
-		tiles_in.x * size.x,
-		tiles_in.y * size.y
-	};
+	CURRENT_MAP.map_dimension.x = tiles_in.x * size.x;
+	CURRENT_MAP.map_dimension.y = tiles_in.y * size.y;
 
 	raw_map.create(map_dimension.x, map_dimension.y);
 
