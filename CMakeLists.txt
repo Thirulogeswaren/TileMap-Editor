@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.20)
 
 project(Editor LANGUAGES CXX)
 
+if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /ZI /Ob0 /Od /RTC1")
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 execute_process(
@@ -21,8 +25,9 @@ set(editor_src editor.cc
 	
 	include/util/console.cc
 	
+	include/menubar.cc
 	include/tileset.cc
-	include/world.cc
+	include/viewport.cc
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")

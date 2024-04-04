@@ -3,59 +3,44 @@
 
 #include "custom_types.h"
 
-struct TilePoints {
-	vector2u min{};
-	vector2u max{};
+struct upoints_t {
+	vector2u min;
+	vector2u max;
 };
 
 class TilesetLoader {
 public:
-	sf::Texture target{};
-	bool target_state{};
+	sf::Sprite		m_tile{};
+	sf::Texture		m_tileset{};
+	sf::Image		m_raw_tileset{};
 
-	TilePoints to_draw{};
+	int16_t			m_index{};
+	int16_t			m_count{};
+	uint8_t			m_state{};
 
-	int index{};
-	int count{};
+	upoints_t		m_points{};
+	vector2u		m_dimension{};
+	vector2f		m_tilesize{ 8.0f, 8.0f };
+
+	vector2f		rect_min{};
+	vector2f		rect_max{};
+
+	float			scale_level{3.0};
 
 	bool LoadImage(std::string_view filepath, const vector2u& tilesize);
-
-	sf::Image& GetTilesetImage();
 
 	void PrevTileset();
 	void NextTileset();
 
-	static TilesetLoader& Instance()
-	{
-		static TilesetLoader loader{};
-		return loader;
-	}
+	void HoveredTile(const uint16_t x, const uint16_t y);
+	void SelectTile(const uint16_t x, const uint16_t y);
 
 private:
-	TilesetLoader();
-	~TilesetLoader();
-
 	void update_current_tileset();
 };
 
-inline struct live_properties {
-	vector2u tilesize{ 8u, 8u };
-	uint16_t u_id{};
+inline TilesetLoader loader{};
 
-	vector2f min{};
-	vector2f max{};
-
-	float scale = 3.0f;
-
-	sf::Sprite live_part{};
-
-	void HoveringTile(const uint16_t x, const uint16_t y);
-
-	void PickingTile(const uint16_t x, const uint16_t y);
-
-} current;
-
-#define TS_LOADER		TilesetLoader::Instance()
-#define TS_CURRENT		current
+#define TS_LOADER	loader
 
 #endif
