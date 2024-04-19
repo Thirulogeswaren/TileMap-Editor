@@ -3,6 +3,11 @@
 
 #include <unordered_map>
 
+struct upoints_t
+{
+	vector2u min, max;
+};
+
 struct tileset
 {
 	vector2f	m_size{};
@@ -17,38 +22,62 @@ struct tileset
 
 static std::vector<tileset> c_tileset;
 
-void TilesetLoader::update_current_tileset()
+using namespace core;
+
+TilesetLoader::TilesetLoader() : r_texture{}, r_image{}
 {
-	if (TS_LOADER.m_index >= c_tileset.size()) { TS_LOADER.m_index--; }
+	m_state = 0;
+	m_index = 0;
+	m_count = 0;
 
-	if (TS_LOADER.m_index <= 0) { TS_LOADER.m_index = 0; }
+	dimension = { 0.0f, 0.0f };
+	tile_size = { 8.0f, 8.0f };
 
-	// set the current properties
-	if (TS_LOADER.m_tileset.loadFromImage(c_tileset[TS_LOADER.m_index].m_image))
-	{
-		TS_LOADER.m_state = 1;
-	}
+	tile_present = { 0.0f, 0.0f };
 
-	TS_LOADER.m_dimension.x = TS_LOADER.m_tileset.getSize().x;
-	TS_LOADER.m_dimension.y = TS_LOADER.m_tileset.getSize().y;
-	TS_LOADER.m_tilesize.x = c_tileset[TS_LOADER.m_index].m_size.x;
-	TS_LOADER.m_tilesize.y = c_tileset[TS_LOADER.m_index].m_size.y;
+	min = max = { 0u, 0u };
 
-	TS_LOADER.scale_level = c_tileset[TS_LOADER.m_index].m_scale;
+	draw_scale = 5.0f;
 
-	TS_LOADER.rect_min = { 0u, 0u };
-	TS_LOADER.rect_max = { 0u, 0u };
-
-	// set referring tileset
-	TS_LOADER.m_raw_tileset = c_tileset[TS_LOADER.m_index].m_image;
+	c_tileset.reserve(30);
 }
 
-bool TilesetLoader::LoadImage(std::string_view filepath, const vector2u& tilesize)
+TilesetLoader::~TilesetLoader()
+{
+	c_tileset.clear();
+}
+
+void TilesetLoader::update_tileset()
+{
+	if (this->m_index >= c_tileset.size()) { this->m_index--; }
+
+	if (this->m_index <= 0) { this->m_index = 0; }
+
+	// set the current properties
+	if (this->r_texture.loadFromImage(c_tileset[this->m_index].m_image))
+	{
+		this->m_state = 100;
+	}
+	this->r_image = c_tileset[this->m_index].m_image;
+
+	// tileset: image width and height
+	this->dimension.x = c_tileset[this->m_index].m_image.getSize().x;
+	this->dimension.y = c_tileset[this->m_index].m_image.getSize().y;
+
+	// tileset: tile size
+	this->tile_size.x = c_tileset[this->m_index].m_size.x;
+	this->tile_size.y = c_tileset[this->m_index].m_size.y;
+
+	this->draw_scale = c_tileset[this->m_index].m_scale;
+
+}
+
+bool TilesetLoader::LoadImage(std::string_view filepath, const uint16_t width, const uint16_t height)
 {
 	if (tileset temp{}; temp.m_image.loadFromFile(filepath.data()))
 	{
-		temp.m_size.x = tilesize.x;
-		temp.m_size.y = tilesize.y;
+		temp.m_size.x = width;
+		temp.m_size.y = height;
 
 		temp.m_tiles_in.x = static_cast<float>(temp.m_image.getSize().x) / temp.m_size.x;
 		temp.m_tiles_in.y = static_cast<float>(temp.m_image.getSize().y) / temp.m_size.y;
@@ -62,20 +91,20 @@ bool TilesetLoader::LoadImage(std::string_view filepath, const vector2u& tilesiz
 
 		if (!c_tileset.empty())
 		{
-			c_tileset[TS_LOADER.m_index].m_scale = TS_LOADER.scale_level;
+			c_tileset[this->m_index].m_scale = this->draw_scale;
 		}
 
 		c_tileset.emplace_back(temp);
 
-		TS_LOADER.m_index = (c_tileset.size() - 1);
-		TS_LOADER.m_count++;
+		this->m_index = (c_tileset.size() - 1);
+		this->m_count++;
 
 		// update TS_LOADER
-		update_current_tileset();
+		this->update_tileset();
 
 		// calculate the tile 's min-max points
-		uint16_t tx = static_cast<uint16_t>(c_tileset[TS_LOADER.m_index].m_size.x);
-		uint16_t ty = static_cast<uint16_t>(c_tileset[TS_LOADER.m_index].m_size.y);
+		uint16_t tx = static_cast<uint16_t>(c_tileset[this->m_index].m_size.x);
+		uint16_t ty = static_cast<uint16_t>(c_tileset[this->m_index].m_size.y);
 
 		uint16_t unique_id{}; // where z -> u_id
 		for (vector2u tmin{ 0u, 0u }, tmax{ tx, ty }, unique_set{}; unique_id< tiles_present;
@@ -90,14 +119,14 @@ bool TilesetLoader::LoadImage(std::string_view filepath, const vector2u& tilesiz
 				unique_set.x = 0u;
 			}
 
-			c_tileset[TS_LOADER.m_index].m_points[unique_id].min = tmin;
-			c_tileset[TS_LOADER.m_index].m_points[unique_id].max = tmax;
+			c_tileset[this->m_index].m_points[unique_id].min = tmin;
+			c_tileset[this->m_index].m_points[unique_id].max = tmax;
 		}
 
-		if (TS_LOADER.m_tilesize.x > TS_LOADER.m_tileset.getSize().x ||
-			TS_LOADER.m_tilesize.y > TS_LOADER.m_tileset.getSize().y)
+		if (this->tile_size.x > c_tileset[this->m_index].m_image.getSize().x ||
+			this->tile_size.y > c_tileset[this->m_index].m_image.getSize().y)
 		{
-			Console::LogMessage("tile_size larger than the tileset", ERROR);
+			LOG_ERROR("tile_size larger than the tileset");
 		}
 
 		return true;
@@ -110,20 +139,20 @@ void TilesetLoader::NextTileset()
 {
 	if ((!m_state) || c_tileset.empty()) return;
 
-	c_tileset[TS_LOADER.m_index++].m_scale = TS_LOADER.scale_level;
-	update_current_tileset();
+	c_tileset[this->m_index++].m_scale = this->draw_scale;
+	this->update_tileset();
 }
 
 void TilesetLoader::PrevTileset()
 {
 	if ((!m_state) || c_tileset.empty()) return;
 
-	c_tileset[TS_LOADER.m_index--].m_scale = TS_LOADER.scale_level;
-	update_current_tileset();
+	c_tileset[this->m_index--].m_scale = this->draw_scale;
+	this->update_tileset();
 }
 
 // unique_set -> index and u_id
-void TilesetLoader::HoveredTile(const uint16_t x, const uint16_t y)
+/*void TilesetLoader::HoveredTile(const uint16_t x, const uint16_t y)
 {
 	static uint16_t active_id{};
 
@@ -143,21 +172,13 @@ void TilesetLoader::HoveredTile(const uint16_t x, const uint16_t y)
 	rect_max.x += c_tileset[TS_LOADER.m_index].m_points[active_id].max.x * scale_level;
 	rect_max.y += c_tileset[TS_LOADER.m_index].m_points[active_id].max.y * scale_level;
 }
+*/
 
-static inline void setScaleFactor(float tile_size, float scale_factor)
-{
-	if (TS_LOADER.m_tilesize.x == TS_LOADER.m_tilesize.y)
-	{
-		if (TS_LOADER.m_tilesize.x == tile_size)
-			TS_LOADER.m_tile.setScale(scale_factor, scale_factor);
-	}
-}
-
-void TilesetLoader::SelectTile(const uint16_t x, const uint16_t y)
+void TilesetLoader::SelectTile(sf::Sprite& sprite, const uint16_t x, const uint16_t y)
 {
 
 	static uint16_t tile_uid{};
-	const auto& [tiles_in_x, tiles_in_y] = c_tileset[TS_LOADER.m_index].m_tiles_in;
+	const auto& [tiles_in_x, tiles_in_y] = c_tileset[this->m_index].m_tiles_in;
 
 	// sets the TS_LOADER->u_id 
 	if (x >= tiles_in_x || y >= tiles_in_y) {
@@ -168,25 +189,23 @@ void TilesetLoader::SelectTile(const uint16_t x, const uint16_t y)
 	}
 
 	// set the min-max point of the tile you choose
-	auto& [active_min, active_max] = TS_LOADER.m_points;
+	this->min = c_tileset[this->m_index].m_points[tile_uid].min;
+	this->max = c_tileset[this->m_index].m_points[tile_uid].max;
 
-	// used later by umap_handler
-	active_min = c_tileset[TS_LOADER.m_index].m_points[tile_uid].min;
-	active_max = c_tileset[TS_LOADER.m_index].m_points[tile_uid].max;
-
-	TS_LOADER.m_tile.setTexture(TS_LOADER.m_tileset, true);
-	TS_LOADER.m_tile.setTextureRect(sf::IntRect
-		{
-			c_tileset[TS_LOADER.m_index].m_points[tile_uid].min.x,
-			c_tileset[TS_LOADER.m_index].m_points[tile_uid].min.y,
-			static_cast<uint16_t>(TS_LOADER.m_tilesize.x),
-			static_cast<uint16_t>(TS_LOADER.m_tilesize.y)
-		}
+	sprite.setTexture(this->r_texture, true);
+	sprite.setTextureRect(sf::IntRect
+	{
+		c_tileset[this->m_index].m_points[tile_uid].min.x,
+		c_tileset[this->m_index].m_points[tile_uid].min.y,
+		static_cast<uint16_t>(this->tile_size.x),
+		static_cast<uint16_t>(this->tile_size.y)
+	}
 	);
-	
-	setScaleFactor(8.0f, 11.0f);
-	setScaleFactor(16.0f, 6.0f);
-	setScaleFactor(32.0f, 3.0f);
-
-	TS_LOADER.m_tile.setOrigin(TS_LOADER.m_tile.getScale() / 2.0f);
+	//
+	//setScaleFactor(8.0f, 11.0f);
+	//setScaleFactor(16.0f, 6.0f);
+	//setScaleFactor(32.0f, 3.0f);
+	//
+	sprite.setScale(3.0f, 3.0f);
+	sprite.setOrigin(this->tile_size / 2.0f);
 }

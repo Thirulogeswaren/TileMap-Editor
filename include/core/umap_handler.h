@@ -3,26 +3,31 @@
 
 #include "custom_types.h"
 
-inline struct map_handler {
+namespace core 
+{
+	struct MapHandler final {
 
-	vector2u map_tilepresent{ 1u, 1u };
-	vector2u map_tilesize{ 8u, 8u };
+		void CreateMap(const vector2u& tiles_in, const vector2u& size);
 
-	vector2u map_dimension{};
-	vector2u map_index{};
+		void UpdateMap(const sf::Image& tileset, const vector2u& min) const;
+		
+		void SaveMap(std::string_view filename) const;
 
-	uint16_t map_state{};
+		void SaveMapLua(std::string_view filename);
 
-	sf::Texture&	GetFinalMap() const;
+		sf::Texture& map;
+		
+		vector2u map_size;
+		vector2u map_tile_size;
 
-	void PlaceTile();
-	
-	void CreateMap(const vector2u& tiles_in, const vector2u& size);
+		vector2u map_dimension;
+		vector2u map_index;
 
-	void SaveMap(std::string_view filename);
+		uint16_t state;
 
-} current_map_properties{};
+		MapHandler();
+		~MapHandler();
 
-#define CURRENT_MAP current_map_properties
-
+	};
+}
 #endif

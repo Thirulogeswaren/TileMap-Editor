@@ -1,41 +1,51 @@
 #ifndef EDITOR_CORE_WINDOW_UI_H
 #define EDITOR_CORE_WINDOW_UI_H
 
+#include "core/ts_loader.h"
+#include "core/umap_handler.h"
+
 #include "nfd.h"
 
 #include "SFML/Graphics/RenderWindow.hpp"
 
-enum class EditorOverlay : uint8_t 
+namespace ns_editor
 {
-	IN_ACTIVE = 0U,
-	MAP_ENABLED,
-	LOADER_ENABLED
-};
+	enum class EditorFlags : uint16_t
+	{
+		IN_ACTIVE = 0U,
+		MAP_ENABLED,
+		LOADER_ENABLED
+	};
 
-class Editor
-{
-public:
-	void MenuBar();
+	class Editor final {
+	public:
+		void MenuBar();
 
-	void Inspector();
+		void Inspector();
 
-	void Viewport();
+		void Viewport();
 
-	void Render();
+		void Render(sf::RenderWindow& window);
 
-	Editor();
-	~Editor();
+		Editor(unsigned int width, unsigned int height);
+		~Editor();
 
-private:
-	sf::RenderWindow* window_ref;
-	EditorOverlay overlay;
+		sf::Sprite tile;
 
-	nfdchar_t* nfd_filepath;
-	nfdresult_t nfd_result;
+	private:
+		core::TilesetLoader loader;
+		core::MapHandler map_handler;
 
-	uint8_t isRunning{};
+	private:
+		EditorFlags overlay;
 
-	uint8_t viewport_hovered{};
-};
+		uint16_t isRunning{};
+		uint16_t load_state{};
+		uint16_t viewport_hovered{};
+		
+		nfdchar_t* nfd_filepath;
+	};
+
+}
 
 #endif

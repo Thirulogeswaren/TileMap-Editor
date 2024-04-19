@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "imgui-SFML.h"
 
+#include "SFML/Graphics/RenderWindow.hpp"
 #include "SFML/Window/Event.hpp"
 
 #if defined(_WIN32) && (_MSC_VER)
@@ -12,22 +13,21 @@
 #define entry_point main
 #endif
 
-namespace {
-	sf::RenderWindow window;
+static sf::RenderWindow window;
 
-	ImVec4 Grey = ImVec4(0.24f, 0.24f, 0.24f, 1.0f);
-	ImVec4 DarkGrey = ImVec4(0.07f, 0.07f, 0.07f, 1.0f);
-	ImVec4 RedLike = ImVec4(0.86f, 0.47f, 0.47f, 1.0f);
-}
+static void setEditorStyle();
 
-Editor::Editor() :
-	window_ref{ nullptr },
-	overlay{ EditorOverlay::IN_ACTIVE },
-	nfd_filepath{ nullptr },
-	nfd_result{ NFD_ERROR }
+using namespace ns_editor;
+
+Editor::Editor(unsigned int width, unsigned int height) :
+	tile			{ },
+	loader			{ },
+	map_handler		{ },
+	overlay			{ EditorFlags::IN_ACTIVE },
+	nfd_filepath	{ nullptr }
 {
 
-	window.create({ 1600, 900 }, "Editor", sf::Style::Default);
+	window.create(sf::VideoMode{ width, height }, "Editor", sf::Style::Default);
 	window.setVerticalSyncEnabled(true);
 
 	ImGui::SFML::Init(window, false);
@@ -38,7 +38,82 @@ Editor::Editor() :
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("cousine.ttf", 20.0f);
 	ImGui::SFML::UpdateFontTexture();
 
-	window_ref = &window;
+	setEditorStyle();
+}
+
+Editor::~Editor()
+{
+	nfd_filepath = nullptr;
+	ImGui::SFML::Shutdown();
+}
+
+int entry_point()
+{
+	Editor core{ 1600, 900 };
+
+	sf::Event event{};
+	sf::Clock delta_time{};
+
+	while (window.isOpen())
+	{
+		while (window.pollEvent(event))
+		{
+			ImGui::SFML::ProcessEvent(window, event);
+
+			if (event.type == sf::Event::Closed)
+				window.close();
+
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+				window.close();
+
+			if (event.type == sf::Event::Resized)
+			{
+				LOG_NORMAL("Window Resized");
+				sf::FloatRect new_viewport = {
+					0.f, 0.f,
+					ImGui::GetIO().DisplaySize.x,
+					ImGui::GetIO().DisplaySize.y
+				};
+				window.setView(sf::View{ new_viewport });
+			}
+		}
+
+		ImGui::SFML::Update(window, delta_time.restart());
+
+		ImGui::DockSpaceOverViewport(
+			ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode
+		);
+
+		// ImGui Begin() && End() calls
+		
+		Console::Render();
+
+		core.MenuBar();
+
+		core.Inspector();
+		
+		core.Viewport();
+
+		core.tile.setPosition(ImGui::GetMousePos());
+
+		// Render States
+		window.clear(sf::Color::Black);
+
+		ImGui::SFML::Render(window);
+		core.Render(window);
+		window.display();
+	}
+
+	return EXIT_SUCCESS;
+}
+
+void setEditorStyle()
+{
+	constexpr ImVec4 Grey = ImVec4(0.24f, 0.24f, 0.24f, 1.0f);
+	constexpr ImVec4 DarkGrey = ImVec4(0.07f, 0.07f, 0.07f, 1.0f);
+	constexpr ImVec4 RedLike = ImVec4(0.86f, 0.47f, 0.47f, 1.0f);
+
+	LOG_NORMAL("%.1f, %.1f, %.1f", 212.0f, 199.0f, 199.0f);
 
 	auto& color = ImGui::GetStyle().Colors;
 
@@ -74,69 +149,4 @@ Editor::Editor() :
 	color[ImGuiCol_CheckMark] = RedLike;
 	color[ImGuiCol_DockingPreview] = Grey;
 
-}
-
-Editor::~Editor()
-{
-	nfd_result = NFD_ERROR;
-	nfd_filepath = nullptr;
-	window_ref = nullptr;
-	ImGui::SFML::Shutdown();
-}
-
-int entry_point()
-{
-	Editor core; sf::Event event{};
-
-	sf::Clock delta_time{};
-
-	while (window.isOpen())
-	{
-		while (window.pollEvent(event))
-		{
-			ImGui::SFML::ProcessEvent(window, event);
-
-			if (event.type == sf::Event::Closed)
-				window.close();
-
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-				window.close();
-
-			if (event.type == sf::Event::Resized)
-			{
-				Console::LogMessage("Window Resized");
-				sf::FloatRect new_viewport = {
-					0.f, 0.f,
-					ImGui::GetIO().DisplaySize.x,
-					ImGui::GetIO().DisplaySize.y
-				};
-				window.setView(sf::View{ new_viewport });
-			}
-		}
-
-		ImGui::SFML::Update(window, delta_time.restart());
-
-		ImGui::DockSpaceOverViewport(
-			ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode
-		);
-
-		// ImGui Begin() && End() calls
-		
-		Console::Render();
-
-		core.MenuBar();
-
-		core.Inspector();
-		
-		core.Viewport();
-
-		// Render States
-		window.clear(sf::Color::Black);
-
-		ImGui::SFML::Render(window);
-		core.Render();
-		window.display();
-	}
-
-	return EXIT_SUCCESS;
 }

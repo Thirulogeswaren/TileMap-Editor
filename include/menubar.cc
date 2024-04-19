@@ -1,13 +1,12 @@
 #include "editor.h"
 
-#include "core/ts_loader.h"
-#include "core/umap_handler.h"
-
 #include "util/console.h"
 
 #include "imgui.h"
 
 static vector2u tiles_in{ 3u, 3u }, tile_sz{ 16u, 16u };
+
+using namespace ns_editor;
 
 void Editor::MenuBar()
 {
@@ -16,16 +15,25 @@ void Editor::MenuBar()
 		if (ImGui::BeginMenu("File")) {
 
 			if (ImGui::MenuItem("Create Map"))
-				this->overlay = EditorOverlay::MAP_ENABLED;
+				this->overlay = EditorFlags::MAP_ENABLED;
 
-			if (ImGui::MenuItem("Save as Image"))
+			if (ImGui::MenuItem("Save ..."))
 			{
-				if (NFD_SaveDialog(nullptr, nullptr, &nfd_filepath) == NFD_OKAY)
+				//if (NFD_SaveDialog("lua", nullptr, &nfd_filepath) == NFD_OKAY)
+				//{
+					this->map_handler.SaveMapLua("example");
+				//	LOG_NORMAL("saved to %s", nfd_filepath);
+				//}
+			}
+
+			if (ImGui::MenuItem("Save As Image"))
+			{
+				if (NFD_SaveDialog("png", nullptr, &nfd_filepath) == NFD_OKAY)
 				{
-					CURRENT_MAP.SaveMap(nfd_filepath);
-					Console::LogMessage("saved to ", nfd_filepath);
+					this->map_handler.SaveMap(nfd_filepath);
 				}
 			}
+
 
 			ImGui::Separator();
 
@@ -37,7 +45,7 @@ void Editor::MenuBar()
 		ImGui::EndMainMenuBar();
 	}
 
-	if (this->overlay == EditorOverlay::MAP_ENABLED)
+	if (this->overlay == EditorFlags::MAP_ENABLED)
 	{
 		ImGui::SetNextWindowFocus();
 
@@ -89,8 +97,8 @@ void Editor::MenuBar()
 		ImGui::Spacing();
 
 		if (ImGui::Button("Create Map")) {
-			CURRENT_MAP.CreateMap(tiles_in, tile_sz);
-			this->overlay = EditorOverlay::IN_ACTIVE;
+			this->map_handler.CreateMap(tiles_in, tile_sz);
+			this->overlay = EditorFlags::IN_ACTIVE;
 		}
 
 		ImGui::End();

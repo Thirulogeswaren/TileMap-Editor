@@ -1,6 +1,7 @@
 #include "console.h"
 
 #include "imgui.h"
+#include <cstdio>
 
 namespace {
     constexpr size_t buffer_size = 128ull;
@@ -9,14 +10,13 @@ namespace {
         char data[buffer_size];
         MessageType type;
 
-        ActualMessage(const char* _data) : ActualMessage{ _data, NORMAL } { }
-
-        ActualMessage(const char* _data, MessageType _type) : type{ _type } {
-            memcpy(&this->data, _data, buffer_size);
+        ActualMessage(const char* _data, va_list arg_list, MessageType _type)
+            : type{ _type } {
+            vsnprintf_s(data, buffer_size, _data, arg_list);
         }
     };
 
-    ImVector<ActualMessage> history{};
+    ImVector<ActualMessage> history;
 }
 
 void Console::Render()
@@ -41,15 +41,12 @@ void Console::Render()
     ImGui::End();
 }
 
-void Console::LogMessage(const char* msg, MessageType type)
+void Console::LogMessage(MessageType type, const char* format, ...)
 {
-    history.push_back(ActualMessage{ msg, type });
-}
+    va_list arg_list;
+    va_start(arg_list, format);
 
-void Console::LogMessage(const char* msg, const char* opt, MessageType type)
-{
-    char temp_buffer[buffer_size];
-    memcpy(&temp_buffer, msg, buffer_size);
-    strcat(temp_buffer, opt);
-    history.push_back(ActualMessage{ temp_buffer, type });
+    history.push_back(ActualMessage{ format, arg_list, type });
+
+    va_end(arg_list);
 }

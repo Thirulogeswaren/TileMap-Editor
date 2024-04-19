@@ -17,7 +17,10 @@ execute_process(
 find_package(ImGui-SFML CONFIG REQUIRED)
 find_package(unofficial-nativefiledialog CONFIG REQUIRED)
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+find_package(Lua REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
+
+include_directories(${CMAKE_SOURCE_DIR}/include ${LUA_INCLUDE_DIR})
 
 set(editor_src editor.cc
 	include/core/ts_loader_impl.cc
@@ -54,4 +57,7 @@ endif()
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ImGui-SFML::ImGui-SFML unofficial::nativefiledialog::nfd)
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+	ImGui-SFML::ImGui-SFML unofficial::nativefiledialog::nfd 
+	${LUA_LIBRARIES} sol2
+)

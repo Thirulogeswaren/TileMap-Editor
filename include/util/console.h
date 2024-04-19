@@ -11,9 +11,11 @@ namespace Console
 {
     void Render();
 
-    void LogMessage(const char*, MessageType = NORMAL);
-
-    void LogMessage(const char*, const char*, MessageType = NORMAL);
+    void LogMessage(MessageType type, const char* format, ...);
 }
+
+#define LOG_NORMAL(fmt, ...) Console::LogMessage(NORMAL, fmt, __VA_ARGS__)
+
+#define LOG_ERROR(fmt, ...)  Console::LogMessage(ERROR, fmt, __VA_ARGS__)
 
 #endif

@@ -3,44 +3,45 @@
 
 #include "custom_types.h"
 
-struct upoints_t {
-	vector2u min;
-	vector2u max;
-};
+namespace core {
+	class TilesetLoader {
+	public:
+		bool LoadImage(std::string_view filepath, const uint16_t width, const uint16_t height);
 
-class TilesetLoader {
-public:
-	sf::Sprite		m_tile{};
-	sf::Texture		m_tileset{};
-	sf::Image		m_raw_tileset{};
+		void SelectTile(sf::Sprite& sprite, const uint16_t x, const uint16_t y);
 
-	int16_t			m_index{};
-	int16_t			m_count{};
-	uint8_t			m_state{};
+		void PrevTileset();
+		void NextTileset();
 
-	upoints_t		m_points{};
-	vector2u		m_dimension{};
-	vector2f		m_tilesize{ 8.0f, 8.0f };
+		sf::Texture	r_texture;
+		sf::Image	r_image;
 
-	vector2f		rect_min{};
-	vector2f		rect_max{};
+		uint16_t m_state{};
+		int16_t  m_index{};
+		int16_t  m_count{};
 
-	float			scale_level{3.0};
+		vector2f	dimension{};
+		vector2f	tile_size{ 8.0f, 8.0f };
+		vector2f	tile_present;
 
-	bool LoadImage(std::string_view filepath, const vector2u& tilesize);
+		vector2u	min, max;
 
-	void PrevTileset();
-	void NextTileset();
+		float		draw_scale{ 3.0f };
 
-	void HoveredTile(const uint16_t x, const uint16_t y);
-	void SelectTile(const uint16_t x, const uint16_t y);
+		TilesetLoader();
 
-private:
-	void update_current_tileset();
-};
+		TilesetLoader(const TilesetLoader&) = delete;
+		TilesetLoader& operator=(const TilesetLoader&) = delete;
 
-inline TilesetLoader loader{};
+		TilesetLoader(TilesetLoader&&) = delete;
+		TilesetLoader& operator=(TilesetLoader&&) = delete;
 
-#define TS_LOADER	loader
+		~TilesetLoader();
+
+	private:
+		void update_tileset();
+
+	};
+}
 
 #endif

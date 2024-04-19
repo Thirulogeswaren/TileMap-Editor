@@ -22,11 +22,13 @@ namespace
 
 }
 
+using namespace ns_editor;
+
+#include "util/console.h"
+
 void Editor::Viewport()
 {
 	ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
-	
-	ImGui::TextDisabled("index: %u - %u", CURRENT_MAP.map_index.x, CURRENT_MAP.map_index.y);
 
 	static vector2f cursor_min = {
 		ImGui::GetContentRegionAvail().x / 2.0f,
@@ -41,19 +43,19 @@ void Editor::Viewport()
 	};
 	
 	cursor_max = {
-		cursor_min.x + (CURRENT_MAP.map_dimension.x * camera_zoom),
-		cursor_min.y + (CURRENT_MAP.map_dimension.y * camera_zoom)
+		cursor_min.x + (this->map_handler.map_dimension.x * camera_zoom),
+		cursor_min.y + (this->map_handler.map_dimension.y * camera_zoom)
 	};
 
 	grid_size = {
-		CURRENT_MAP.map_tilesize.x * camera_zoom,
-		CURRENT_MAP.map_tilesize.y * camera_zoom
+		this->map_handler.map_tile_size.x * camera_zoom,
+		this->map_handler.map_tile_size.y * camera_zoom
 	};
 
-	if (CURRENT_MAP.map_state) {
-		ImGui::Image(CURRENT_MAP.GetFinalMap(), {
-				CURRENT_MAP.map_dimension.x * camera_zoom,
-				CURRENT_MAP.map_dimension.y * camera_zoom
+	if (map_handler.state) {
+		ImGui::Image(this->map_handler.map, {
+				this->map_handler.map_dimension.x * camera_zoom,
+				this->map_handler.map_dimension.y * camera_zoom
 			}
 		);
 	}
@@ -63,18 +65,14 @@ void Editor::Viewport()
 		pt.y <= cursor_max.y && pt2.y <= cursor_max.y;
 		pt.y += grid_size.y, pt2.y += grid_size.y)
 	{
-		ImGui::GetWindowDrawList()->AddLine(
-			{ pt.x, pt.y }, { pt2.x, pt2.y }, IM_COL32(255, 255, 255, 255)
-		);
+		ImGui::GetWindowDrawList()->AddLine(pt, pt2, IM_COL32(255, 255, 255, 255));
 	}
 
 	for (vector2f pt{ cursor_min }, pt2{ cursor_min.x, cursor_max.y };
 		pt.x <= cursor_max.x && pt2.x <= cursor_max.x;
 		pt.x += grid_size.x, pt2.x += grid_size.x)
 	{
-		ImGui::GetWindowDrawList()->AddLine(
-			{ pt.x, pt.y }, { pt2.x, pt2.y }, IM_COL32(255, 255, 255, 255)
-		);
+		ImGui::GetWindowDrawList()->AddLine(pt, pt2, IM_COL32(255, 255, 255, 255));
 	}
 
 	if (ImGui::IsKeyDown(ImGuiKey_W)) { cursor_min.y += drag_speed; }
@@ -84,34 +82,33 @@ void Editor::Viewport()
 
 	if (ImGui::IsWindowHovered())
 	{
-		viewport_hovered = 1;
+		viewport_hovered = 100u;
 		if (ImGui::GetIO().MouseWheel > 0.0f)
 		{
 			camera_zoom += scale_strength;
-			cursor_min.x -= (CURRENT_MAP.map_dimension.x / 2u);
-			cursor_min.y -= (CURRENT_MAP.map_dimension.y / 2u);
+			cursor_min.x -= (this->map_handler.map_dimension.x / 2u);
+			cursor_min.y -= (this->map_handler.map_dimension.y / 2u);
 		}
 		if (ImGui::GetIO().MouseWheel < 0.0f && camera_zoom > scale_strength)
 		{
 			camera_zoom -= scale_strength;
-			cursor_min.x += (CURRENT_MAP.map_dimension.x / 2u);
-			cursor_min.y += (CURRENT_MAP.map_dimension.y / 2u);
+			cursor_min.x += (this->map_handler.map_dimension.x / 2u);
+			cursor_min.y += (this->map_handler.map_dimension.y / 2u);
 		}
 
-		if (CURRENT_MAP.map_state && TS_LOADER.m_state && mouse_position.x >= 1.0f && mouse_position.y >= 1.0f)
+		if (mouse_position.x >= 1.0f && mouse_position.y >= 1.0f)
 		{
 			mouse_position.x /= camera_zoom;
 			mouse_position.y /= camera_zoom;
 
-			CURRENT_MAP.map_index.x = mouse_position.x / CURRENT_MAP.map_tilesize.x;
-			CURRENT_MAP.map_index.y = mouse_position.y / CURRENT_MAP.map_tilesize.y;
+			this->map_handler.map_index.x = mouse_position.x / this->map_handler.map_tile_size.x;
+			this->map_handler.map_index.y = mouse_position.y / this->map_handler.map_tile_size.y;
 
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left, true)) {
-				if (CURRENT_MAP.map_index.x < CURRENT_MAP.map_tilepresent.x &&
-					CURRENT_MAP.map_index.y < CURRENT_MAP.map_tilepresent.y)
-				{
-					CURRENT_MAP.PlaceTile();
-				}
+			if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && 
+				map_handler.map_index.x < map_handler.map_size.x &&
+				map_handler.map_index.y < map_handler.map_size.y)
+			{
+				this->map_handler.UpdateMap(loader.r_image, loader.min);
 			}
 		}
 	}
@@ -123,12 +120,10 @@ void Editor::Viewport()
 	ImGui::End();
 }
 
-void Editor::Render()
+void Editor::Render(sf::RenderWindow& window)
 {
-	if (viewport_hovered)
-	{
-		// draw the selected tile
-		TS_LOADER.m_tile.setPosition(ImGui::GetMousePos());
-		window_ref->draw(TS_LOADER.m_tile);
+	if (viewport_hovered && overlay == EditorFlags::IN_ACTIVE) {
+		tile.setPosition(ImGui::GetMousePos());
+		window.draw(tile);
 	}
 }

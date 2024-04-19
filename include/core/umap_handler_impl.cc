@@ -1,65 +1,89 @@
 #include "umap_handler.h"
-#include "ts_loader.h"
 
 #include "util/console.h"
 
-#include "imgui.h"
+#define SOL_ALL_SAFETIES_ON 1
+#include "sol/sol.hpp"
 
-namespace {
+#include <fstream>
 
-	struct umap_handler_impl
-	{
-		sf::Texture		hmap_tex_buffer{};
-		sf::Image		hmap_raw_buffer{};
-
-	} umap_instance;
-
-	sf::Color transparent{  };
+namespace 
+{
+	sf::Texture		actual_map{};
+	sf::Image		raw_image{};
 }
 
-sf::Texture& map_handler::GetFinalMap() const
+using namespace core;
+
+MapHandler::MapHandler() : map{ actual_map }
 {
-	return umap_instance.hmap_tex_buffer;
+	map_size = { 1u, 1u };
+	map_tile_size = { 8u, 8u };
+	
+	map_dimension = { 0u, 0u };
+	map_index = { 0u,0u };
+	
+	state = 0;
+
 }
 
-void map_handler::CreateMap(const vector2u& tiles_in, const vector2u& size)
+MapHandler::~MapHandler()
 {
-	CURRENT_MAP.map_tilepresent = tiles_in;
-	CURRENT_MAP.map_tilesize = size;
 
-	CURRENT_MAP.map_dimension.x = tiles_in.x * size.x;
-	CURRENT_MAP.map_dimension.y = tiles_in.y * size.y;
+}
 
-	auto& [m_texture, m_image] = umap_instance;
+void MapHandler::CreateMap(const vector2u& tiles_in, const vector2u& tile_size)
+{
+	this->map_size = tiles_in;
+	this->map_tile_size = tile_size;
 
-	m_image.create(map_dimension.x, map_dimension.y, ImGui::GetStyle().Colors[ImGuiCol_WindowBg]);
+	this->map_dimension.x = tiles_in.x * tile_size.x;
+	this->map_dimension.y = tiles_in.y * tile_size.y;
 
-	CURRENT_MAP.map_state = {
-		m_texture.create(map_dimension.x, map_dimension.y)
+	raw_image.create(map_dimension.x, map_dimension.y, sf::Color(17, 17, 17, 255));
+
+	this->state = {
+		actual_map.create(map_dimension.x, map_dimension.y)
 	};
 	
-	m_texture.update(m_image);
+	actual_map.update(raw_image);
 }
 
-void map_handler::PlaceTile()
+void MapHandler::UpdateMap(const sf::Image& tileset, const vector2u& min) const
 {
-	auto& [m_texture, m_image] = umap_instance;
-	
-	m_image.copy(TS_LOADER.m_raw_tileset,
-		CURRENT_MAP.map_index.x * CURRENT_MAP.map_tilesize.x,
-		CURRENT_MAP.map_index.y * CURRENT_MAP.map_tilesize.y,
+	raw_image.copy(tileset,
+		this->map_index.x * this->map_tile_size.x,
+		this->map_index.y * this->map_tile_size.y,
 		sf::IntRect{
-			TS_LOADER.m_points.min.x, TS_LOADER.m_points.min.y,
-			CURRENT_MAP.map_tilesize.x, CURRENT_MAP.map_tilesize.y
+			min.x, min.y,
+			this->map_tile_size.x, this->map_tile_size.y
 		},
 		true
 	);
 
-	m_texture.update(m_image);
+	actual_map.update(raw_image);
 }
 
-void map_handler::SaveMap(std::string_view filename)
+void MapHandler::SaveMap(std::string_view filename) const
 {
-	umap_instance.hmap_raw_buffer.saveToFile(filename.data());
-} 
+	std::string tmp_filename = std::string{ filename };
 
+	if (filename.rfind('.') == std::string_view::npos) {
+		tmp_filename.append(".png", 4);
+	}
+	
+	raw_image.saveToFile(tmp_filename);
+
+	LOG_NORMAL("saved %s", tmp_filename.data());
+}
+
+void MapHandler::SaveMapLua(std::string_view filename)
+{
+	sol::state lua;
+
+	std::ofstream lua_file{ "example.lua" };
+
+	lua.open_libraries(sol::lib::base);
+
+	lua.script_file("example.lua");
+}
