@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(Editor LANGUAGES CXX)
 
+# msvc hot-reload
 if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /ZI /Ob0 /Od /RTC1")
 endif()
@@ -16,11 +17,9 @@ execute_process(
 # ImGui backend includes SFML and ImGui
 find_package(ImGui-SFML CONFIG REQUIRED)
 find_package(unofficial-nativefiledialog CONFIG REQUIRED)
+find_package(tinyxml2 CONFIG REQUIRED)
 
-find_package(Lua REQUIRED)
-find_package(sol2 CONFIG REQUIRED)
-
-include_directories(${CMAKE_SOURCE_DIR}/include ${LUA_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(editor_src editor.cc
 	include/core/ts_loader_impl.cc
@@ -58,6 +57,6 @@ endif()
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 
-	ImGui-SFML::ImGui-SFML unofficial::nativefiledialog::nfd 
-	${LUA_LIBRARIES} sol2
+	ImGui-SFML::ImGui-SFML unofficial::nativefiledialog::nfd
+	tinyxml2::tinyxml2
 )

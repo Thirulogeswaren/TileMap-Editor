@@ -13,7 +13,7 @@ namespace core
 		
 		void SaveMap(std::string_view filename) const;
 
-		void SaveMapLua(std::string_view filename);
+		void SaveMapXML(std::string_view filename);
 
 		sf::Texture& map;
 		

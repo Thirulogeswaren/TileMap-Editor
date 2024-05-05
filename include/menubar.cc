@@ -17,11 +17,11 @@ void Editor::MenuBar()
 			if (ImGui::MenuItem("Create Map"))
 				this->overlay = EditorFlags::MAP_ENABLED;
 
-			if (ImGui::MenuItem("Save ..."))
+			if (ImGui::MenuItem("Save As XML file"))
 			{
 				//if (NFD_SaveDialog("lua", nullptr, &nfd_filepath) == NFD_OKAY)
 				//{
-					this->map_handler.SaveMapLua("example");
+					this->map_handler.SaveMapXML("example.xml");
 				//	LOG_NORMAL("saved to %s", nfd_filepath);
 				//}
 			}

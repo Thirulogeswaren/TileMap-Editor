@@ -2,10 +2,7 @@
 
 #include "util/console.h"
 
-#define SOL_ALL_SAFETIES_ON 1
-#include "sol/sol.hpp"
-
-#include <fstream>
+#include "tinyxml2.h"
 
 namespace 
 {
@@ -77,13 +74,34 @@ void MapHandler::SaveMap(std::string_view filename) const
 	LOG_NORMAL("saved %s", tmp_filename.data());
 }
 
-void MapHandler::SaveMapLua(std::string_view filename)
+void MapHandler::SaveMapXML(std::string_view filename)
 {
-	sol::state lua;
+	using namespace tinyxml2;
 
-	std::ofstream lua_file{ "example.lua" };
+	XMLDocument doc;
 
-	lua.open_libraries(sol::lib::base);
+	doc.NewDeclaration();
 
-	lua.script_file("example.lua");
+	XMLElement* root = doc.NewElement("tilemap");
+
+	XMLElement* tileset = doc.NewElement("tileset");
+
+	tileset->SetAttribute("filename", "test.png");
+	tileset->SetText(54);
+
+	doc.InsertEndChild(tileset);
+
+	root->InsertFirstChild(tileset);
+
+	doc.InsertEndChild(root);
+
+
+	if (doc.SaveFile(filename.data()))
+	{
+		LOG_ERROR("Error saving %s to disk", filename.data());
+	}
+	else
+	{
+		LOG_NORMAL("Exported %s", filename.data());
+	}
 }
