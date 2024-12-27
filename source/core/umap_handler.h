@@ -1,7 +1,7 @@
 #ifndef MAP_RESOURCE_CREATOR_NHANDLER_HH
 #define MAP_RESOURCE_CREATOR_NHANDLER_HH
 
-#include "custom_types.h"
+#include <core/common.h>
 
 namespace core 
 {

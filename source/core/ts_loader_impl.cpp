@@ -2,6 +2,8 @@
 #include "util/console.h"
 
 #include <unordered_map>
+#include <vector>
+#include <cmath>
 
 struct upoints_t
 {
@@ -126,7 +128,7 @@ bool TilesetLoader::LoadImage(std::string_view filepath, const uint16_t width, c
 		if (this->tile_size.x > c_tileset[this->m_index].m_image.getSize().x ||
 			this->tile_size.y > c_tileset[this->m_index].m_image.getSize().y)
 		{
-			LOG_ERROR("tile_size larger than the tileset");
+			// LOG_ERROR("tile_size larger than the tileset");
 		}
 
 		return true;
@@ -193,19 +195,19 @@ void TilesetLoader::SelectTile(sf::Sprite& sprite, const uint16_t x, const uint1
 	this->max = c_tileset[this->m_index].m_points[tile_uid].max;
 
 	sprite.setTexture(this->r_texture, true);
-	sprite.setTextureRect(sf::IntRect
-	{
-		c_tileset[this->m_index].m_points[tile_uid].min.x,
-		c_tileset[this->m_index].m_points[tile_uid].min.y,
-		static_cast<uint16_t>(this->tile_size.x),
-		static_cast<uint16_t>(this->tile_size.y)
-	}
-	);
+	// sprite.setTextureRect(sf::IntRect
+	// {
+	// 	c_tileset[this->m_index].m_points[tile_uid].min.x,
+	// 	c_tileset[this->m_index].m_points[tile_uid].min.y,
+	// 	static_cast<uint16_t>(this->tile_size.x),
+	// 	static_cast<uint16_t>(this->tile_size.y)
+	// }
+	// );
 	//
 	//setScaleFactor(8.0f, 11.0f);
 	//setScaleFactor(16.0f, 6.0f);
 	//setScaleFactor(32.0f, 3.0f);
 	//
-	sprite.setScale(3.0f, 3.0f);
+	//sprite.setScale(3.0f, 3.0f);
 	sprite.setOrigin(this->tile_size / 2.0f);
 }

@@ -1,10 +1,11 @@
-#include "umap_handler.h"
+#include <core/umap_handler.h>
 
-#include "util/console.h"
+#include <util/console.h>
 
-#include "tinyxml2.h"
+#include <SFML/Graphics/Image.hpp>
+#include <SFML/Graphics/Rect.hpp>
 
-namespace 
+namespace
 {
 	sf::Texture		actual_map{};
 	sf::Image		raw_image{};
@@ -37,26 +38,26 @@ void MapHandler::CreateMap(const vector2u& tiles_in, const vector2u& tile_size)
 	this->map_dimension.x = tiles_in.x * tile_size.x;
 	this->map_dimension.y = tiles_in.y * tile_size.y;
 
-	raw_image.create(map_dimension.x, map_dimension.y, sf::Color(17, 17, 17, 255));
+	// raw_image.create(map_dimension.x, map_dimension.y, sf::Color(17, 17, 17, 255));
 
-	this->state = {
-		actual_map.create(map_dimension.x, map_dimension.y)
-	};
+	// this->state = {
+	// 	actual_map.create(map_dimension.x, map_dimension.y)
+	// };
 	
 	actual_map.update(raw_image);
 }
 
 void MapHandler::UpdateMap(const sf::Image& tileset, const vector2u& min) const
 {
-	raw_image.copy(tileset,
-		this->map_index.x * this->map_tile_size.x,
-		this->map_index.y * this->map_tile_size.y,
-		sf::IntRect{
-			min.x, min.y,
-			this->map_tile_size.x, this->map_tile_size.y
-		},
-		true
-	);
+	// raw_image.copy(tileset,
+	// 	this->map_index.x * this->map_tile_size.x,
+	// 	this->map_index.y * this->map_tile_size.y,
+	// 	sf::IntRect{
+	// 		min.x, min.y,
+	// 		this->map_tile_size.x, this->map_tile_size.y
+	// 	},
+	// 	true
+	// );
 
 	actual_map.update(raw_image);
 }
@@ -69,39 +70,12 @@ void MapHandler::SaveMap(std::string_view filename) const
 		tmp_filename.append(".png", 4);
 	}
 	
-	raw_image.saveToFile(tmp_filename);
+	// raw_image.saveToFile(tmp_filename);
 
 	LOG_NORMAL("saved %s", tmp_filename.data());
 }
 
 void MapHandler::SaveMapXML(std::string_view filename)
 {
-	using namespace tinyxml2;
 
-	XMLDocument doc;
-
-	doc.NewDeclaration();
-
-	XMLElement* root = doc.NewElement("tilemap");
-
-	XMLElement* tileset = doc.NewElement("tileset");
-
-	tileset->SetAttribute("filename", "test.png");
-	tileset->SetText(54);
-
-	doc.InsertEndChild(tileset);
-
-	root->InsertFirstChild(tileset);
-
-	doc.InsertEndChild(root);
-
-
-	if (doc.SaveFile(filename.data()))
-	{
-		LOG_ERROR("Error saving %s to disk", filename.data());
-	}
-	else
-	{
-		LOG_NORMAL("Exported %s", filename.data());
-	}
 }

@@ -1,5 +1,5 @@
-#include "include/editor.h"
-#include "include/util/console.h"
+#include <editor/editor.h>
+#include <util/console.h>
 
 #include "imgui.h"
 #include "imgui-SFML.h"
@@ -20,30 +20,31 @@ static void setEditorStyle();
 using namespace ns_editor;
 
 Editor::Editor(unsigned int width, unsigned int height) :
-	tile			{ },
+	//tile			{ },
 	loader			{ },
 	map_handler		{ },
-	overlay			{ EditorFlags::IN_ACTIVE },
-	nfd_filepath	{ nullptr }
+	overlay			{ EditorFlags::IN_ACTIVE }
+	//nfd_filepath	{ nullptr }
 {
 
-	window.create(sf::VideoMode{ width, height }, "Editor", sf::Style::Default);
+	window.create(sf::VideoMode({ width, height }), "Editor", sf::Style::Close | sf::Style::Titlebar);
 	window.setVerticalSyncEnabled(true);
 
-	ImGui::SFML::Init(window, false);
-	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	auto stat = ImGui::SFML::Init(window, false);
+
+	// ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	// ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	ImGui::GetIO().FontGlobalScale = 1.0f;
 
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("cousine.ttf", 20.0f);
-	ImGui::SFML::UpdateFontTexture();
+	stat = ImGui::SFML::UpdateFontTexture();
 
 	setEditorStyle();
 }
 
 Editor::~Editor()
 {
-	nfd_filepath = nullptr;
+	//nfd_filepath = nullptr;
 	ImGui::SFML::Shutdown();
 }
 
@@ -51,38 +52,34 @@ int entry_point()
 {
 	Editor core{ 1600, 900 };
 
-	sf::Event event{};
 	sf::Clock delta_time{};
 
 	while (window.isOpen())
 	{
-		while (window.pollEvent(event))
+		while (std::optional event = window.pollEvent())
 		{
-			ImGui::SFML::ProcessEvent(window, event);
+			ImGui::SFML::ProcessEvent(window, event.value());
 
-			if (event.type == sf::Event::Closed)
+			if (event->getIf<sf::Event::Closed>() || sf::Keyboard::isKeyPressed(sf::Keyboard::Scancode::Escape))
 				window.close();
-
-			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-				window.close();
-
-			if (event.type == sf::Event::Resized)
+			
+			if (event->getIf<sf::Event::Resized>())
 			{
-				LOG_NORMAL("Window Resized");
-				sf::FloatRect new_viewport = {
-					0.f, 0.f,
-					ImGui::GetIO().DisplaySize.x,
-					ImGui::GetIO().DisplaySize.y
-				};
-				window.setView(sf::View{ new_viewport });
+				// LOG_NORMAL("Window Resized");
+				// sf::FloatRect new_viewport = {
+				// 	0.f, 0.f,
+				// 	ImGui::GetIO().DisplaySize.x,
+				// 	ImGui::GetIO().DisplaySize.y
+				// };
+				// window.setView(sf::View{ new_viewport });
 			}
 		}
 
 		ImGui::SFML::Update(window, delta_time.restart());
 
-		ImGui::DockSpaceOverViewport(
-			ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode
-		);
+		//ImGui::DockSpaceOverViewport(
+		//	ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode
+		//);
 
 		// ImGui Begin() && End() calls
 		
@@ -94,7 +91,7 @@ int entry_point()
 		
 		core.Viewport();
 
-		core.tile.setPosition(ImGui::GetMousePos());
+		// core.tile.setPosition(ImGui::GetMousePos());
 
 		// Render States
 		window.clear(sf::Color::Black);
@@ -147,6 +144,6 @@ void setEditorStyle()
 	color[ImGuiCol_HeaderHovered] = RedLike;
 
 	color[ImGuiCol_CheckMark] = RedLike;
-	color[ImGuiCol_DockingPreview] = Grey;
+	// color[ImGuiCol_DockingPreview] = Grey;
 
 }

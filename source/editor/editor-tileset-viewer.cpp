@@ -28,7 +28,7 @@ void Editor::Inspector()
 	if (overlay == EditorFlags::LOADER_ENABLED) {
 
 		ImGui::SetNextWindowFocus();
-		ImGui::SetNextWindowPos(ImGui::GetWindowViewport()->GetCenter(), ImGuiCond_None, { 0.5,0.5 });
+		//ImGui::SetNextWindowPos(ImGui::GetWindowViewport()->GetCenter(), ImGuiCond_None, { 0.5,0.5 });
 		ImGui::SetNextWindowSize({ 250.0f, 150.0f }, ImGuiCond_FirstUseEver);
 		ImGui::Begin("Import Settings", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 		ImGui::AlignTextToFramePadding();
@@ -54,21 +54,21 @@ void Editor::Inspector()
 		ImGui::SameLine();
 
 		if (ImGui::Button("browse")) {
-			if (NFD_OpenDialog(nullptr, nullptr, &nfd_filepath) == NFD_OKAY)
-				this->load_state = NFD_OKAY;
+			//if (NFD_OpenDialog(nullptr, nullptr, &nfd_filepath) == NFD_OKAY)
+			//	this->load_state = NFD_OKAY;
 		}
 
 		ImGui::SameLine();
 
 		if (ImGui::Button("ok")) { 
-			if (this->load_state == NFD_OKAY)
-			{
-				if (loader.LoadImage(nfd_filepath, tilesize.x, tilesize.y)) {
-					canvas_size.x = this->loader.r_texture.getSize().x * this->loader.draw_scale;
-					canvas_size.y = this->loader.r_texture.getSize().y * this->loader.draw_scale;
-					loader.SelectTile(tile, 0u, 0u);
-				}
-			}
+			// if (this->load_state == NFD_OKAY)
+			// {
+			// 	if (loader.LoadImage(nfd_filepath, tilesize.x, tilesize.y)) {
+			// 		canvas_size.x = this->loader.r_texture.getSize().x * this->loader.draw_scale;
+			// 		canvas_size.y = this->loader.r_texture.getSize().y * this->loader.draw_scale;
+			// 		loader.SelectTile(tile, 0u, 0u);
+			// 	}
+			// }
 			overlay = EditorFlags::IN_ACTIVE;
 		}
 
@@ -164,7 +164,7 @@ void Editor::Inspector()
 
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 		{
-			loader.SelectTile(tile, tile_index.x, tile_index.y);
+			// loader.SelectTile(tile, tile_index.x, tile_index.y);
 		}
 	}
 	else {

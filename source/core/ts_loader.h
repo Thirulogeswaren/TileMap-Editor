@@ -1,7 +1,8 @@
 #ifndef TILESET_LOADER_NTRACER_HH
 #define TILESET_LOADER_NTRACER_HH
 
-#include "custom_types.h"
+#include <core/common.h>
+#include <SFML/Graphics/Image.hpp>
 
 namespace core {
 	class TilesetLoader {

@@ -2,7 +2,7 @@
 
 #include "util/console.h"
 
-#include "imgui.h"
+#include <imgui.h>
 
 static vector2u tiles_in{ 3u, 3u }, tile_sz{ 16u, 16u };
 
@@ -28,10 +28,10 @@ void Editor::MenuBar()
 
 			if (ImGui::MenuItem("Save As Image"))
 			{
-				if (NFD_SaveDialog("png", nullptr, &nfd_filepath) == NFD_OKAY)
-				{
-					this->map_handler.SaveMap(nfd_filepath);
-				}
+				//if (NFD_SaveDialog("png", nullptr, &nfd_filepath) == NFD_OKAY)
+				//{
+				//	this->map_handler.SaveMap(nfd_filepath);
+				//}
 			}
 
 
@@ -49,7 +49,7 @@ void Editor::MenuBar()
 	{
 		ImGui::SetNextWindowFocus();
 
-		ImGui::SetNextWindowPos(ImGui::GetWindowViewport()->GetCenter(), ImGuiCond_None, { 0.5, 0.5 });
+		// ImGui::SetNextWindowPos(ImGui::GetWindowViewport()->GetCenter(), ImGuiCond_None, { 0.5, 0.5 });
 
 		ImGui::SetNextWindowSize({ 390.0f, 190.0f });
 

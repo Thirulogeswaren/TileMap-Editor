@@ -1,12 +1,11 @@
 #ifndef EDITOR_CORE_WINDOW_UI_H
 #define EDITOR_CORE_WINDOW_UI_H
 
-#include "core/ts_loader.h"
-#include "core/umap_handler.h"
+#include <core/ts_loader.h>
+#include <core/umap_handler.h>
 
-#include "nfd.h"
-
-#include "SFML/Graphics/RenderWindow.hpp"
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Sprite.hpp>
 
 namespace ns_editor
 {
@@ -30,7 +29,7 @@ namespace ns_editor
 		Editor(unsigned int width, unsigned int height);
 		~Editor();
 
-		sf::Sprite tile;
+		// sf::Sprite tile;
 
 	private:
 		core::TilesetLoader loader;
@@ -43,7 +42,7 @@ namespace ns_editor
 		uint16_t load_state{};
 		uint16_t viewport_hovered{};
 		
-		nfdchar_t* nfd_filepath;
+		//nfdchar_t* nfd_filepath;
 	};
 
 }

@@ -123,7 +123,7 @@ void Editor::Viewport()
 void Editor::Render(sf::RenderWindow& window)
 {
 	if (viewport_hovered && overlay == EditorFlags::IN_ACTIVE) {
-		tile.setPosition(ImGui::GetMousePos());
-		window.draw(tile);
+		// tile.setPosition(ImGui::GetMousePos());
+		// window.draw(tile);
 	}
 }

@@ -12,7 +12,7 @@ namespace {
 
         ActualMessage(const char* _data, va_list arg_list, MessageType _type)
             : type{ _type } {
-            vsnprintf_s(data, buffer_size, _data, arg_list);
+            vsnprintf(data, buffer_size, _data, arg_list);
         }
     };
 
