@@ -32,7 +32,7 @@ FetchContent_MakeAvailable(spdlog)
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui
-    GIT_TAG v1.91.6
+    GIT_TAG docking
 )
 
 FetchContent_MakeAvailable(imgui)
