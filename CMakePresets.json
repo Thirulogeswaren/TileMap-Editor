@@ -1,34 +1,47 @@
 {
-  "version": 6,
-  "configurePresets": [
-    {
-      "name": "base",
-      "hidden": true,
-      "generator": "Ninja",
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Ninja",
 
-      "binaryDir": "${sourceDir}/build/${presetName}",
-      "installDir": "${sourceDir}/build/install/${presetName}"
-    },
-    {
-      "name": "linux-build",
-      "inherits": "base",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "installDir": "${sourceDir}/build/install/${presetName}"
+        },
+        {
+            "name": "config-linux",
+            "inherits": "base",
 
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
 
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "g++"
-      }
-    }
-  ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
+            "name": "config-windows",
+            "inherits": "base",
 
-  "buildPresets": [
-    {
-      "name": "Linux-Build",
-      "configurePreset": "linux-build"
-    }
-  ]
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_COMPILER": "cl"
+            }
+        }
+    ],
+
+    "buildPresets": [
+        {
+            "name": "Build-Linux",
+            "configurePreset": "config-linux"
+        },
+        {
+            "name": "Build-Windows",
+            "configurePreset": "config-windows"
+        }
+    ]
 }
