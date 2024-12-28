@@ -1,5 +1,5 @@
-#include "ts_loader.h"
-#include "util/console.h"
+#include <core/tileset-loader.h>
+#include <util/console.h>
 
 #include <unordered_map>
 #include <vector>

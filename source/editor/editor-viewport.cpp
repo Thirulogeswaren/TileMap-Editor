@@ -1,7 +1,7 @@
-#include "editor.h"
+#include <editor/editor.h>
 
-#include "core/ts_loader.h"
-#include "core/umap_handler.h"
+#include <core/tileset-loader.h>
+#include <core/map-handler.h>
 
 #include "imgui.h"
 #include "imgui-SFML.h"
@@ -19,6 +19,7 @@ namespace
 	vector2f grid_size{};
 
 	vector2f mouse_position{};
+	vector2f temp{};
 
 }
 

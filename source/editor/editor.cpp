@@ -24,7 +24,6 @@ Editor::Editor(unsigned int width, unsigned int height) :
 	loader			{ },
 	map_handler		{ },
 	overlay			{ EditorFlags::IN_ACTIVE }
-	//nfd_filepath	{ nullptr }
 {
 
 	window.create(sf::VideoMode({ width, height }), "Editor", sf::Style::Close | sf::Style::Titlebar);
@@ -32,8 +31,8 @@ Editor::Editor(unsigned int width, unsigned int height) :
 
 	auto stat = ImGui::SFML::Init(window, false);
 
-	// ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	// ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	ImGui::GetIO().FontGlobalScale = 1.0f;
 
 	ImGui::GetIO().Fonts->AddFontFromFileTTF("cousine.ttf", 20.0f);
@@ -77,9 +76,9 @@ int entry_point()
 
 		ImGui::SFML::Update(window, delta_time.restart());
 
-		//ImGui::DockSpaceOverViewport(
-		//	ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode
-		//);
+		ImGui::DockSpaceOverViewport(
+			0U, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode
+		);
 
 		// ImGui Begin() && End() calls
 		
@@ -144,6 +143,6 @@ void setEditorStyle()
 	color[ImGuiCol_HeaderHovered] = RedLike;
 
 	color[ImGuiCol_CheckMark] = RedLike;
-	// color[ImGuiCol_DockingPreview] = Grey;
+	color[ImGuiCol_DockingPreview] = Grey;
 
 }

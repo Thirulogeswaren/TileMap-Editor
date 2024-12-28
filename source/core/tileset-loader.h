@@ -1,7 +1,7 @@
 #ifndef TILESET_LOADER_NTRACER_HH
 #define TILESET_LOADER_NTRACER_HH
 
-#include <core/common.h>
+#include <core/common-types.h>
 #include <SFML/Graphics/Image.hpp>
 
 namespace core {

@@ -1,8 +1,8 @@
 #ifndef EDITOR_CORE_WINDOW_UI_H
 #define EDITOR_CORE_WINDOW_UI_H
 
-#include <core/ts_loader.h>
-#include <core/umap_handler.h>
+#include <core/tileset-loader.h>
+#include <core/map-handler.h>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Sprite.hpp>
