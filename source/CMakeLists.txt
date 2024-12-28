@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.24...3.40)
 
 add_executable(${CMAKE_PROJECT_NAME} editor/editor.cpp)
 
