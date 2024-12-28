@@ -1,11 +1,6 @@
 .vs
 .vscode
-.gitignore
 
-# files to be ignored
-bin
-
+# CMake build folders
 build
 out
-
-CMakePresets.json
