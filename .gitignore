@@ -4,3 +4,6 @@
 # CMake build folders
 build
 out
+
+# final artifact
+bin
